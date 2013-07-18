@@ -1,6 +1,7 @@
 class public checksum
 
-    method public  static BBjNumber modulo10 (BBjNumber in)
+    REM Mod10Rek
+	method public  static BBjNumber modulo10 (BBjNumber in)
         
         dim t[10]
         

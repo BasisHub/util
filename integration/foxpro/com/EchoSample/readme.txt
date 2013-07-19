@@ -8,5 +8,8 @@
 1.5 restart BBjServices
 
 2. register the comtest ActiveX control in the fp folder
+2.1 make sure vfp 9 runtinme is installed (http://archive.msdn.microsoft.com/FoxPro/Release/ProjectReleases.aspx?ReleaseId=125)
+2.2 change to the directory where comtest.exe and comtest.dll is stored
+2.3 run "comtest.exe /regserver"
 
 3. run the "echo.bbj" sample in the bbj folder

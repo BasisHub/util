@@ -160,10 +160,16 @@ class public json
     
         rem TODO: implement a case-insensitive get method, maybe by introducing a case insensitive map. 
         rem However, please always preserve original case for representation in the message!
+
+        rem TODO: correctly handle arrays that may reside in the map under this name 
     
         v! = #Fields!.get(f$)
         
-        methodret str(v!)
+        if v! = null() then
+            methodret null()
+        else
+            methodret str(v!)
+        fi
     
     methodend
 
@@ -192,6 +198,8 @@ next
 
 j!.set("numbers",v!)
 
+
+
 ? j!.getJsonString()
 
 rem parse from string
@@ -199,3 +207,6 @@ j2! = new json("{""name"":""Duck"",""firstame"":""Donald"",""nephews"":[{""name"
 ? j2!.getJsonString()
 
 ? j2!.get("name")
+
+
+? j!.get("nonexistent")

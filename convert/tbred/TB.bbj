@@ -1,0 +1,433 @@
+class public TB
+
+    method public static BBjNumber DTN(BBjString dateval$, BBjString datemask$)
+
+        seterr DTNJ_err
+
+        if num(dateval$)<=0 or len(dateval$)<>len(datemask$) then
+            goto DTNJ_err
+        fi
+        let dt$=$$, mk$=$$, datemask$=cvs(datemask$,4)
+
+                let x=pos("YYYY"=datemask$)
+        if x<>0 then
+            let dt$=dt$+dateval$(x,4), mk$=mk$+"%Yl", datemask$(x,4)="xxxx"
+        fi
+
+                let x=pos("YY"=datemask$)
+        if x<>0 then
+            if num(dateval$(x,2))>50 then
+                let dt$=dt$+"19"+dateval$(x,2)
+            else
+                let dt$=dt$+"20"+dateval$(x,2)
+            fi
+            let mk$=mk$+"%Yl", datemask$(x,2)="xx"
+        fi
+
+        let x=pos("MM"=datemask$)
+        if x<>0 then
+            let dt$=dt$+dateval$(x,2), mk$=mk$+"%Mz", datemask$(x,2)="xx"
+        else
+            let dt$=dt$+"01", mk$=mk$+"%Mz"
+        fi
+
+        let x=pos("DD"=datemask$)
+        if x<>0 then
+            let dt$=dt$+dateval$(x,2), mk$=mk$+"%Dz", datemask$(x,2)="xx"
+        else
+            let dt$=dt$+"01", mk$=mk$+"%Dz"
+        fi
+
+        methodret jul(dt$,mk$)-1721423
+
+        DTNJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString NTD(BBjNumber dateval, BBjString datemask$)
+
+        seterr NTDJ_err
+
+        let x=pos("YYYY"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%Yl"+datemask$(X+4)
+        fi
+
+                let x=pos("YY"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%Yz"+datemask$(X+2)
+        fi
+
+        let x=pos("MM"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%Mz"+datemask$(X+2)
+        fi
+
+        let x=pos("DD"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%Dz"+datemask$(X+2)
+        fi
+        
+        methodret date(dateval+1721423:datemask$)
+
+        NTDJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString CVT(BBjString stringa$, BBjNumber valore)
+
+        seterr CVTJ_err
+
+        if valore=1 then
+            let stringa$=tbl(stringa$,$7F$)
+            goto CVTJ_exit
+        fi
+
+        if valore=2 then
+            if len(stringa$)=0 then
+                goto CVTJ_exit
+            fi
+            let temp$=$$
+            for x=1 to len(stringa$)
+            if pos(stringa$(x,1)=$0920$)=0 then
+                let temp$=temp$+stringa$(x,1)
+            fi
+            next x
+            let stringa$=temp$
+            goto CVTJ_exit
+        fi
+
+        if valore=4 then
+            let stringa$=cvs(stringa$,16)
+            if len(stringa$)=0 then
+                goto CVTJ_exit
+            fi
+            let temp$=$$
+            for x=1 to len(stringa$)
+            if pos(stringa$(x,1)=$0920$)=0 then
+                let temp$=temp$+stringa$(x,1)
+            fi
+            next x
+            let stringa$=temp$
+            goto CVTJ_exit
+        fi
+
+        if valore=8 then
+            let stringa$=cvs(stringa$,1)
+            goto CVTJ_exit
+        fi
+
+        if valore=16 then
+            let stringa$=cvs(stringa$,32)
+            goto CVTJ_exit
+        fi
+
+        if valore=32 then
+            let stringa$=cvs(stringa$,4)
+            goto CVTJ_exit
+        fi
+
+        if valore=64 then
+            if len(stringa$)=0 then
+                goto CVTJ_exit
+            fi
+            for x=1 to len(stringa$)
+            if stringa$(x,1)="[" then
+                let stringa$(x,1)="("
+            fi
+            if stringa$(x,1)="]" then
+                let stringa$(x,1)=")"
+            fi
+            next x
+            goto CVTJ_exit
+        fi
+
+        if valore=128 then
+        let stringa$=cvs(stringa$,2)
+        fi
+
+        if valore=256 then
+            goto CVTJ_exit
+        fi
+
+        if valore=512 then
+            let stringa$=swap(stringa$,$02$)
+            goto CVTJ_exit
+        fi
+
+        if valore=1024 then
+            if len(stringa$)=0 then
+                goto CVTJ_exit
+            fi
+            let temp$=$$
+            for x=1 to len(stringa$)
+            if pos(stringa$(x,1)=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")<>0 then
+                let temp$=temp$+stringa$(x,1)
+            fi
+            next x
+            let stringa$=temp$
+            goto CVTJ_exit
+        fi
+
+        if valore=2048 then
+            let stringa$=tbl(stringa$,$7F$)
+            goto CVTJ_exit
+        fi
+
+        if valore=4096 then
+            let stringa$=cvs(stringa$,8)
+            goto CVTJ_exit
+        fi
+
+        if valore=8192 then
+            let stringa$=swap(stringa$,$08$)
+            goto CVTJ_exit
+        fi
+
+        CVTJ_exit:
+        methodret stringa$
+
+        CVTJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber NMV(BBjString value$)
+
+        seterr NMVJ_err
+
+        let x=num(value$,err=NOT_NUM)
+        methodret 1
+
+        NOT_NUM:
+        methodret 0
+
+        NMVJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString ALL(BBjString value$, BBjString character$)
+
+        seterr ALLJ_err
+
+        dim temp$(len(value$),character$)
+        if value$="" then
+            let temp$="* * * String that should not match with anything, hopefully... :) * * *"
+        fi
+        methodret temp$
+
+        ALLJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString TSK(BBjNumber channel)
+
+        seterr TSKJ_err
+
+        let devices$=""
+        while x<100
+            let temp$=tsk(x,err=TSKJ_exit)
+            let devices$=devices$+temp$(3,2)+"    "
+            let x=x+1
+        wend
+        goto TSKJ_exit
+
+        TSKJ_exit:
+        methodret devices$
+
+        TSKJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString FID(BBjNumber channel)
+
+        seterr FIDJ_err
+
+        let temp$=fid(channel)
+        if len(temp$)=2 then
+            let fid_tbd$=""
+            goto FIDJ_exit
+        fi
+        dim fid_tbd$(22)
+        let fid_tbd$(4,6)=temp$(pos("/"=temp$,-1)+1)
+        let fid_tbd$(10,1)=temp$(1,1)
+        let rec_num=dec(temp$(3,4))
+        let fid_tbd$(12,3)=bin(rec_num)
+        let key_size=dec(temp$(2,1))
+        if rec_num<32768 then
+            let fid_tbd$(11,1)=bin(key_size+4)
+        else
+            let fid_tbd$(11,1)=bin(key_size+6)
+        fi
+        let fid_tbd$(15,2)=temp$(7,2)
+
+        FIDJ_exit:
+        methodret fid_tbd$+temp$
+
+        FIDJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber FILE(BBjString fid_tbd$)
+
+        seterr FILEJ_err
+
+        file fid_tbd$(23)
+        methodret 0
+
+        FILEJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber DIR(BBjString file_name$, BBjNumber key_size, BBjNumber num_rec, BBjNumber rec_size, BBjNumber disk_num, BBjNumber sec_num)
+
+        seterr DIRJ_err
+
+        mkeyed stbl("!ARCHIVI")+file_name$,key_size,0,rec_size
+        methodret 0
+
+        DIRJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber SOR(BBjString file_name$, BBjNumber key_size, BBjNumber num_rec, BBjNumber disk_num, BBjNumber sec_num)
+
+        seterr SORJ_err
+
+        mkeyed stbl("!ARCHIVI")+file_name$,key_size,0,0
+        methodret 0
+
+        SORJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber TEX(BBjString file_name$, BBjNumber disk_num, BBjNumber sec_num)
+
+        seterr TEXJ_err
+
+        if disk_num = 2 then
+            string stbl("!ARCHIVI")+file_name$
+        else
+            string stbl("!ESPORTAZIONI")+file_name$
+        fi
+
+        methodret 0
+
+        TEXJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString WGL(BBjNumber dummy)
+
+        seterr WGLJ_err
+
+        print (0) 'EE'+'CI'+'WINDOW'("LIST"),
+        read record (0,siz=1) count$
+        read record (0,siz=asc(count$)) list$
+        print (0) 'BE',
+        methodret list$
+
+        WGLJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber WDA(BBjNumber dummy)
+
+        seterr WDAJ_err
+
+        list$=TB.WGL(0)
+        for x=1 to len(list$)
+            let win=dec(list$(x,1))
+            if win then
+                print 'DROP'(win)
+            fi
+        next x
+        methodret 0
+
+        WDAJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjString E47(BBjString stringa$, BBjNumber offs, BBjNumber length)
+
+        methodret str(stringa$(offs,length),err=*next)
+        methodret ""
+
+    methodend
+
+    method public static BBjString E47(BBjString stringa$, BBjNumber offs)
+
+        methodret str(stringa$(offs),err=*next)
+        methodret ""
+
+    methodend
+
+    method public static BBjString GPH(BBjString stringa$, BBjString caratteri$)
+
+        seterr GPHJ_err
+        let stringa$=stringa$+$00$, car1$="", car2$="37584629:01", graph$=""
+        for x=1 to len(caratteri$) step 3
+            let car1$=car1$+chr(num(caratteri$(x,3)))
+        next x
+        while stringa$<>$00$
+            let p=pos(stringa$(1,1)=car1$)
+            if p<>0 then
+                let graph$=graph$+'GS'+fill(pos(car1$(p,1)<>stringa$(2)),car2$(p,1))+'GE'
+                let stringa$=stringa$(pos(car1$(p,1)<>stringa$))
+            else
+                let graph$=graph$+stringa$(1,1)
+                let stringa$=stringa$(2)
+            fi
+        wend
+        methodret graph$
+
+        GPHJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+        methodend
+
+    method public static BBjNumber WGN(BBjNumber dummy)
+
+        seterr WGNJ_err
+
+        list$=TB.WGL(0)
+        methodret dec(list$(1,1))
+
+        WGNJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+    method public static BBjNumber WDL(BBjString lista1$)
+
+        seterr WDLJ_err
+
+        lista2$=TB.WGL(0)
+        for x=1 to len(lista2$)
+            if pos(lista2$(x,1)=lista1$)=0 then
+                let win=dec(lista2$(x,1))
+                if win then
+                    print @(0,0),'DROP'(win),
+                fi
+            fi
+        next x
+        methodret 0
+
+        WDLJ_err:
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+
+    methodend
+
+classend

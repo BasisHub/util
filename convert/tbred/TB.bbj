@@ -209,7 +209,7 @@ class public TB
 
     methodend
 
-    method public static BBjString ALL(BBjString value$, BBjString character$)
+    method public static BBjString ALLBBJ(BBjString value$, BBjString character$)
 
         seterr ALLJ_err
 

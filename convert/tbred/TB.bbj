@@ -429,5 +429,22 @@ class public TB
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
 
     methodend
+    
+    rem /* 
+    rem * replaces the tb unt(filename$) function that retrieve the first channel on which the file was opened
+    rem * @param the name of the file to retrieve the channel 
+    rem * @return the first channel on which the file was opened 
+    rem */ 
+    method public static BBjNumber tbunt(BBjString unt$) 
+      LET UNT0$=CHN,UNT0=1
+      UNT_LOOP:
+      IF UNT0>LEN(UNT0$) THEN methodret 0
+      LET UNT1=DEC(UNT0$(UNT0,2)),UNT1$=FID(UNT1)
+      IF POS(UNT1$(1,1)=$000102030405060786$) AND UNT1$(9)=UNT$ THEN methodret UNT1
+      LET UNT0=UNT0+2
+      GOTO UNT_LOOP
+    methodend 
+    
 
 classend
+

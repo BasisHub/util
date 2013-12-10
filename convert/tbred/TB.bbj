@@ -435,7 +435,7 @@ class public TB
     rem * @param the name of the file to retrieve the channel 
     rem * @return the first channel on which the file was opened 
     rem */ 
-    method public static BBjNumber tbunt(BBjString unt$) 
+    method public static BBjNumber TBUNT(BBjString unt$) 
       LET UNT0$=CHN,UNT0=1
       UNT_LOOP:
       IF UNT0>LEN(UNT0$) THEN methodret 0
@@ -444,6 +444,19 @@ class public TB
       LET UNT0=UNT0+2
       GOTO UNT_LOOP
     methodend 
+    
+    rem /*
+    rem * For positive numbers, this numeric function returns the truncated integer portion of the number (the 
+    rem *same as the INT function). For negative numbers, this function returns the integer portion of the number 
+    rem *unconditionally rounded to the next smaller negative integer if the original negative number contained 
+    rem *any fractional portion.
+    rem reflect TB's FIX
+    rem */ 
+    method public static BBjNumber FIX(BBjNumber N)
+        IF N<0 AND N<>INT(N) THEN LET N=INT(N-1) ELSE LET N=INT(N)
+        methodret N
+    methodend 
+    
     
 
 classend

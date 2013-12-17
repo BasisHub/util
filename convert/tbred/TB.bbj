@@ -457,7 +457,39 @@ class public TB
         methodret N
     methodend 
     
-    
+    rem /*
+    rem * INFODEV, Christophe RICHARD
+    rem * This function is design to simulate the Tbred logical disk
+    rem * in the config.bbx we add some global vars like
+    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
+    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
+    rem * ...
+    rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
+    rem * This string is used to create files 
+    rem */
+    method public static REPDSK(BBJNumber numdsk)
+        methodret STBL("DSK_D"+str(numdsk))
+    methodend
+
+rem /*
+    rem * INFODEV, Christophe RICHARD
+    rem * This function is design to simulate the Tbred logical disk
+    rem * in the config.bbx we add some global vars like
+    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
+    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
+    rem * ...
+    rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
+    rem * This string is used to create files 
+    rem */
+    method public static NUMDSK(BBJString filepath$)
+        numdsk=0
+        FOR dsk=0 to 9
+            repdsk$=STBL("DSK_D"+str(dsk),err=labnext)
+            if filepath$(1,len(repdsk$))=repdsk$ the numdsk=dsk; break
+            labnext:
+        NEXT dsk
+        methodret STBL(numdsk)
+    methodend
 
 classend
 

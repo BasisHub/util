@@ -491,56 +491,6 @@ class public TB
         methodret numdsk
     methodend
 
-    method public static Boolean LIKE(BBjString a!,BBjString b!) 
-        rem /* map TBD regexpr to java 
-        rem map ? to . 
-        rem map [?] to \?
-        rem map [*] to \*
-        rem map [[] to \[
-        rem */ 
-        b! = b!.replaceAll("\[\*\]","\\*") 
-        b! = b!.replaceAll("\[\?\]","\\?") 
-        b! = b!.replaceAll("(?<!\\)\?",".")  
-        b! = b!.replaceAll("\[\[\]","\\[") 
-    
-        methodret a!.matches(b!,err=*next)
-        methodret BBjAPI().FALSE
-    methodend 
- 
- rem /*
-    rem * INFODEV, Christophe RICHARD
-    rem * This function is design to simulate the Tbred logical disk
-    rem * in the config.bbx we add some global vars like
-    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
-    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
-    rem * ...
-    rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
-    rem * This string is used to create files 
-    rem */
-    method public static BBjString REPDSK(BBjNumber numdsk)
-        methodret STBL("DSK_D"+str(numdsk))
-    methodend
-
-    rem /*
-    rem * INFODEV, Christophe RICHARD
-    rem * This function is design to simulate the Tbred logical disk
-    rem * in the config.bbx we add some global vars like
-    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
-    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
-    rem * ...
-    rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
-    rem * This string is used to create files 
-    rem */
-    method public static BBjNumber NUMDSK(BBjString filepath$)
-        numdsk=0
-        FOR dsk=0 to 9
-            repdsk$=STBL("DSK_D"+str(dsk),err=labnext)
-            if filepath$(1,len(repdsk$))=repdsk$ then numdsk=dsk; break
-            labnext:
-        NEXT dsk
-        methodret numdsk
-    methodend
- 
 
 classend
 

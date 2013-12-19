@@ -1,0 +1,40 @@
+REM /**
+REM  * addFunctions.bbj
+REM  * @author atimm
+REM  *
+REM  * TBD line numbers do not exeed 65k add functions starting 99000
+REM  */
+  
+
+addNEA: 
+    enter ch 
+    numline=99000
+    line$=" print ""should never get here""";gosub printLine 
+    line$="DEF FNNEA(NEA$,NEA)";gosub printLine
+    line$="DIM D$:""n:i(1),e1:i(4),b1:i(4),e2:i(4),b2:i(4),e3:i(4),b3:i(4)""";gosub printLine
+    line$="LET D$=SEVAL(""DIMS(""+NEA$+""[ALL])"",ERR=NEA_ERR)";gosub printLine
+    line$="IF NEA=-3 THEN RETURN D.B3";gosub printLine
+    line$="IF NEA=-2 THEN RETURN D.B2";gosub printLine
+    line$="IF NEA=-1 THEN RETURN D.B1";gosub printLine
+    line$="IF NEA=0 THEN RETURN D.N";gosub printLine
+    line$="IF NEA=1 THEN RETURN D.E1-1";gosub printLine
+    line$="IF NEA=2 THEN RETURN D.E2-1";gosub printLine
+    line$="IF NEA=3 THEN RETURN D.E3-1";gosub printLine
+    line$="FNERR 41";gosub printLine
+    line$="NEA_ERR: RETURN 0";gosub printLine
+    line$="FNEND" ;gosub printLine
+exit 
+
+printLine: 
+        gosub getNextLineNumber
+        print (ch)numline$+line$
+   return
+
+getNextLineNumber: 
+    numline$=str(numline:"00000")+" " 
+    numline=numline+10
+  return 
+  
+  
+  
+   

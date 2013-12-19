@@ -585,15 +585,9 @@ class public TB
     method public static void REMSORT()
     methodend 
 
-
-    method public static void CREATEVKEYED(BBjString createString$) 
-        rem VKEYED FILE$,S$:[1:1:1],0,101,DSK,0,ERR=01111
-        if pos("VKEYED"=createString$)=0 then throw "try to create non vkeyed",250
-        beginVar=pos("VKEYED"=createString$)
-        endVar = pos(","=createString$)-beginVar
-        file$=createString$(beginVar,endVar)
-        
-    methodend 
+    method public static void setKeyName(BBjString fileName$,BBjString oldKeyName$,BBjString newKeyName$)
+    methodend     
+       
 classend
 
 file$="/usr2/AGI/tmp/test123"

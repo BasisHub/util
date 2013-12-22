@@ -1,0 +1,80 @@
+//#charset: windows-1252
+
+VERSION "4.0"
+
+WINDOW 101 "SQL Explorer" 100 100 700 475
+BEGIN
+    EVENTMASK 3287287500
+    INVISIBLE
+    KEYBOARDNAVIGATION
+    NAME "Form"
+    STATICTEXT 100, "Databases:", 14, 12, 90, 21
+    BEGIN
+        JUSTIFICATION 32768
+        NAME "Static Text"
+    END
+
+    LISTBUTTON 101, "", 110, 8, 119, 200
+    BEGIN
+        NAME "LB_DATABASES"
+        SELECTIONHEIGHT 22
+    END
+
+    STATICTEXT 102, "Tables:", 242, 10, 90, 21
+    BEGIN
+        JUSTIFICATION 32768
+        NAME "Static Text"
+    END
+
+    LISTBUTTON 103, "", 338, 6, 119, 200
+    BEGIN
+        NAME "LB_TABLES"
+        SELECTIONHEIGHT 22
+    END
+
+    BUTTON 104, "SELECT TOP 100 *", 521, 6, 153, 25
+    BEGIN
+        NAME "BTN_SELECT"
+    END
+
+    CUSTOMEDIT 105, "", 50, 60, 605, 90
+    BEGIN
+        CLIENTEDGE
+        NAME "CED_SQL"
+    END
+
+    SCROLLBAR 106, 655, 60, 20, 90
+    BEGIN
+        NAME "SCROLL_SQL"
+    END
+
+    BUTTON 107, "Execute", 50, 156, 145, 29
+    BEGIN
+        NAME "BTN_EXEC"
+    END
+
+    GRID 108, "", 50, 202, 630, 240
+    BEGIN
+        CLIENTEDGE
+        COLUMNHEAD 25, 110
+        COLUMNS 0
+        FOREGROUNDCOLOR RGB(0,0,0)
+        HORIZLINES
+        HSCROLLBAR
+        MAXCOLS 2147483647
+        NAME "GRID_RESULT"
+        ROWS 0
+        USERSIZE
+        VERTLINES
+        VSCROLLBAR
+    END
+
+    STATICTEXT 111, "", 50, 438, 610, 25
+    BEGIN
+        FONT "Dialog" 8,bold
+        FOREGROUNDCOLOR RGB(255,0,0)
+        NAME "ST_RESULT"
+    END
+
+END
+

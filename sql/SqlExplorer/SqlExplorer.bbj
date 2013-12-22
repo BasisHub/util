@@ -439,7 +439,7 @@ classend
 
 
 rem Test run
-if tcb(13)=0 and argc = 1 and !(BBjAPI().getRuntime().isDebugging()) then
+if tcb(13)=0 and argc = 1 and !(BBjAPI().getRuntime().isDebugging()) and info(3,6)<>"5" then
     new DialogWizardRun(pgm(-1))
     release
 endif

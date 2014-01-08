@@ -3,6 +3,24 @@ REM  * replace.bbj
 REM  * @author atimm
 REM  *
 REM  */
+replace:
+enter z$ 
+if pos("LIKE"=Z$)>0 and pos("IF "=Z$)>0 then call "replace.bbj::replaceLike",Z0$ endif 
+call "replace.bbj::replaceENV",Z0$  
+call "replace.bbj::replaceVKEYED",Z0$
+rem call "replace.bbj::replaceNumArray",Z0$
+rem #TODO: comment line that have REM ">BBJ REM 
+rem #TODO: GRAPH=ASC(PGCHARBASE) -> GRAPH=ASC(stbl("!PGCHARBASE"))
+rem #TODO: FINPUT (0,ATR=$05$+CHR(COLN)+CHR(LIGN)+CHR(LONG_AFF)+CHR(LONG_SAI),ERR=xxxxx) E$
+rem #TODO:CALL "DB%FINPUT",ERR=xxxxx,COLN,LIGN,LONG_AFF,LONG_SAI,0,"",E$,FCT
+rem #TODO:FINPUT (0,ATR=$05$+CHR(COLN)+CHR(LIGN)+CHR(LONG_AFF)+CHR(LONG_SAI),TIM=TPS_TIMER,ERR=xxxxx) E$
+rem #TODO:CALL "DB%FINPUT",ERR=xxxxx,COLN,LIGN,LONG_AFF,LONG_SAI,TPS_TIMER,"",E$,FCT
+rem #TODO:FINPUT (0,ATR=$05$+CHR(COLN)+CHR(LIGN)+CHR(LONG_AFF)+CHR(LONG_SAI),EDT=VEDT$,ERR=xxxxx) E$
+rem #TODO:CALL "DB%FINPUT",ERR=xxxxx,COLN,LIGN,LONG_AFF,LONG_SAI,0,VEDT$,E$,FCT
+rem #TODO:FINPUT (0,ATR=$05$+CHR(COLN)+CHR(LIGN)+CHR(LONG_AFF)+CHR(LONG_SAI),EDT=VEDT$,TIM=TPS_TIMER,ERR=xxxxx) E$
+rem #TODO:ALL "DB%FINPUT",ERR=xxxxx,COLN,LIGN,LONG_AFF,LONG_SAI,TPS_TIMER,VEDT$,E$,FCT
+
+return
 
 
 replaceLike: 
@@ -86,22 +104,22 @@ if pos("VKEYED"=z$)=0 then exit endif;      createString$=z$(pos("VKEYED"=z$))
         endVar = pos(":"=createString$)-beginVar
         keyName$=createString$(beginVar,endVar)
 
-          beginVar=pos(":"=createString$)
+          beginVar=pos(":"=createString$)+1
         endVar = pos(","=createString$,1,2)-beginVar
-        keyChain$=seval(createString$(beginVar,endVar))
+        keyChain$=createString$(beginVar,endVar)
 
             nbrec=0
 
-         beginVar=pos(","=createString$,1,3)
+         beginVar=pos(","=createString$,1,3)+1
         endVar = pos(","=createString$,1,4)-beginVar
         reclen$=createString$(beginVar,endVar) 
 
 
-        beginVar=pos(","=createString$,1,4)
+        beginVar=pos(","=createString$,1,4)+1
         endVar = pos(","=createString$,1,5)-beginVar
         dsknum$=createString$(beginVar,endVar)
 
-                escape
+rem                 escape
         createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+"),0,""0"""
         z$=beginLine$+createString$+endline$
 

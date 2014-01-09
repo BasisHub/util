@@ -40,7 +40,7 @@ class public json
 
         #Fields!.clear()
         rem TODO: maybe put in some more sanity checking
-        s$=cvs(s$,3)
+        s$=cvs(s$,19)
         
         if s$(1,1)<> "{" or s$(len(s$),1)<>"}" throw "{} missing - check format!",43
         
@@ -160,15 +160,37 @@ class public json
     
         rem TODO: implement a case-insensitive get method, maybe by introducing a case insensitive map. 
         rem However, please always preserve original case for representation in the message!
-
-        rem TODO: correctly handle arrays that may reside in the map under this name 
-    
+  
         v! = #Fields!.get(f$)
         
         if v! = null() then
             methodret null()
         else
-            methodret str(v!)
+            if cvs(str(v!),3)(1,1)="[" then
+                throw "Field is an array!",47
+            else
+                methodret str(v!)
+            fi
+        fi
+    
+    methodend
+
+    
+    method public BBjVector getArray(BBjString f$)
+    
+        rem TODO: implement a case-insensitive get method, maybe by introducing a case insensitive map. 
+        rem However, please always preserve original case for representation in the message!
+
+        v! = #Fields!.get(f$)
+        
+        if v! = null() then
+            methodret null()
+        else
+            if cvs(str(v!),3)(1,1)<>"[" then
+                throw "Field is not an array!",47
+            else
+                methodret v!
+            fi
         fi
     
     methodend
@@ -210,3 +232,20 @@ j2! = new json("{""name"":""Duck"",""firstame"":""Donald"",""nephews"":[{""name"
 
 
 ? j!.get("nonexistent")
+
+j3! = new json("{""codes"": [{ ""code"":""76515611221"" , ""lat"":""49.242342"", ""long"":""6.9627662"",""time"":""2013-11-23 16:14:23"" }, { ""code"":""72321611221"" , ""lat"":""49.123232"", ""long"":""6.9622122"",""time"":""2013-11-23 17:11:36"" }, ]}")
+rem this should fail!
+rem ? j3!.get("codes")
+
+codes! = j3!.getArray("codes")
+
+it! = codes!.iterator()
+while it!.hasNext()
+    jx! = new json(str(it!.next()))
+    ? jx!.get("code")
+    ? jx!.get("lat")
+    ? jx!.get("long")
+    ? jx!.get("time")
+wend
+
+? j3!.toString()

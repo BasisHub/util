@@ -607,6 +607,19 @@ class public TB
 
     method public static void setKeyName(BBjString fileName$,BBjString oldKeyName$,BBjString newKeyName$)
     methodend     
-       
+     
+     
+    rem /* 
+    rem *
+    rem * allbbj 
+    rem * checks if string is composed of char
+    rem *
+    rem */ 
+    method public static boolean ALLBBj(BBjString input$,BBjString compareString$)
+        seterr not_equal
+        if input$=FILL(len(input$),compareString$(1,1)) then methodret bbjapi().TRUE endif 
+        not_equal: 
+        methodret bbjapi().FALSE
+    methodend    
 classend
 

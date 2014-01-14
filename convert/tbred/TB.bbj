@@ -605,6 +605,7 @@ class public TB
     method public static void REMSORT()
     methodend 
 
+    rem change keyname or set keyname for first key 
     method public static void setKeyName(BBjString fileName$,BBjString oldKeyName$,BBjString newKeyName$)
         ch=unt 
         open(ch)filename$
@@ -614,6 +615,15 @@ class public TB
         info!.setKeyName(0,newKeyName$) 
     methodend     
      
+    method public static void setKeyName(BBjString fileName$,BBjNumber keyIndex,BBjString newKeyName$)
+        ch=unt 
+        open(ch)filename$
+        declare BBjFileInfo info! 
+        info! = bbjapi().getFileSystem().getFileInfo(ch) 
+        info!.setKeyName(keyIndex,newKeyName$,err=*next) 
+REM         info!.setKeyName(0,newKeyName$) 
+    methodend     
+
      
     rem /* 
     rem *

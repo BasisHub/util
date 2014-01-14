@@ -653,11 +653,13 @@ REM         info!.setKeyName(0,newKeyName$)
     
     
     method public static BBjString DSD(BBjString dev$) 
-        fid$=fid(0) 
+        dim fid$(72)
+        fid$(1)=fid(0) 
         if dev$=fid(0) then 
             dev$=fid$(1,2) 
-            
         endif 
+        fid$(11,8)=stbl("!ID_TERM",err=*next)
+        methodret fid$
     methodend 
       
 classend

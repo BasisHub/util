@@ -54,8 +54,6 @@ z! = StringReplace.replaceArray(z!,"DELETE")
 
 rem replace like with TB.LIKE 
 z! = StringReplace.replaceLike(z!)
-rem replace like with TB.LIKE2 
-z! = StringReplace.replaceLike2(z!)
 
 
 z$=z!
@@ -300,6 +298,8 @@ REM         keyWordMap!.put("","") ;
 
         rem check for custom functions 
         if keyword!.startsWith("FN") then continue endif 
+        rem except for ARGV
+        if keyword!.startsWith("ARGV") then continue endif 
         if StringReplace.matchesKeyword(keyword!) then continue endif 
         System.out.println("word:"+m!.toString())        
         posClosingBracket=z!.indexOf(")",m!.start());if posClosingBracket=-1 then methodret z! endif 
@@ -426,7 +426,10 @@ rem      escape
         newLine! = new String("") 
         declare Pattern p!     
 REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]+)\ ((?i)LIKE\ ?)([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\_\/\:\-]+|\"".*\""\=\d)\ ")
-        p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]+)\ ((?i)LIKE\ ?)([\w\.\$\(\)\[\]\,]+|(\"".*?\""))\ ")
+REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]+)\ ((?i)LIKE\ ?)([\w\.\$\(\)\[\]\,]+|(\"".*?\""))\ ")
+REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]+)\ ((?i)LIKE\ ?)([\w\.\$\(\)\[\]\,\+\*\""\?\*\-\/\ ]+)(THEN)")
+REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]+)\ ((?i)LIKE\ ?)(.*?)(\<|\>|\=|THEN)")
+        p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)\ ((?i)LIKE\ ?)(.*?)(\=0|\bTHEN\b|\bAND\b|\bOR\b)")       
         declare Matcher m!
         m! = p!.matcher(z!)
 
@@ -435,8 +438,8 @@ REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]
         beginLine! = new String("") 
         endLine! = new String("") 
         startLine=0
-        
-        while m!.find() 
+
+                while m!.find() 
             beginLine! = z!.substring(startLine,m!.start(1))
             endline! = z!.substring(m!.end(3))
             newLine! = newLine!+beginLine!+" TB.LIKE("+m!.group(1).trim()+","+m!.group(3).trim()+") "
@@ -444,49 +447,11 @@ REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-]
         wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
+            System.out.println(z!)
             methodret newLine!
     replaceLikeError: 
     rem donoting         
     methodret z! 
     methodend 
-
-REM /*
-    REM *
-    REM *  replace like 
-    REM * 
-    REM */ 
-    method public static String replaceLike2(String z!) 
-        seterr replaceLike2Error
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-REM         p! = Pattern.compile("(TB\.LIKE\()(.*?\,)(.*?)\=(.*?)\)\THEN")
-        p! = Pattern.compile("(TB\.LIKE\()(.*?\,)(.*?)\=(.*?)\).\ *?THEN")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-        
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(3))
-            endline! = z!.substring(m!.end(4)+1)
-            startLine=m!.end(4)+1   
-            escape
-            tmp=num(m!.group(4),err=*next);newLine! = newLine!+beginLine!+m!.group(3).trim()+") OR "+m!.group(3).trim()+"="""+m!.group(4).trim()+""" ";continue        
-            newLine! = newLine!+beginLine!+m!.group(3).trim()+") OR "+m!.group(3).trim()+"="+m!.group(4).trim()+" "
-  
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceLike2Error: 
-    rem donoting         
-    methodret z! 
-    methodend
-
 
 classend 

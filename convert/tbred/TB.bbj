@@ -254,8 +254,10 @@ class public TB
         let temp$=fid(channel)
         if len(temp$)=2 then
             let fid_tbd$=""
-            goto FIDJ_exit
+            goto FIDJ_exit  
         fi
+        
+        
         dim fid_tbd$(22)
         let fid_tbd$(4,6)=temp$(pos("/"=temp$,-1)+1)
         let fid_tbd$(10,1)=temp$(1,1)
@@ -269,6 +271,11 @@ class public TB
         fi
         let fid_tbd$(15,2)=temp$(7,2)
 
+        rem disk number 
+        numdsk=#NUMDISK(fid(channel))
+        fid_tbd$(20,1)=str(numdsk)
+        
+        
         FIDJ_exit:
         methodret fid_tbd$+temp$
 

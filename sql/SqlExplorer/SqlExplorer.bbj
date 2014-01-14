@@ -1,0 +1,475 @@
+
+rem /** 
+rem * SqlExplorer
+rem * 
+rem * <class description>
+rem * 
+rem * @author <author>
+rem * @version <version>
+rem */
+
+use ::DialogWizard/BBDialog.bbj::BBDialog
+use ::DialogWizard/DialogUtils.bbj::DialogUtils
+use ::DialogWizard/DialogWizardRun.bbj::DialogWizardRun
+use ::translations/bbtranslator.bbj::BBTranslator
+use ::bbwindowutils.bbj::BBWindowUtils
+
+class public SqlExplorer extends BBDialog
+
+    rem static member (fields) are only created once for the class
+    field private static BBjAPI        API! = BBjAPI()
+    field private static BBjNumber     TRUE = #API!.TRUE
+    field private static BBjNumber     FALSE = #API!.FALSE
+    field private static BBjSysGui     SysGui! = #API!.openSysGui("X0")
+    field private static BBjThinClient ThinClient! = #API!.getThinClient()
+    field private static BBjString     ClientLocale$ = #ThinClient!.getClientLocale()
+    field private static BBjString     PgmDirectory$ = pgm(-2)(1,max(pos("\"=pgm(-2),-1),pos("/"=pgm(-2),-1)))
+    field private static BBTranslator  Translator! = BBTranslator.getInstance("SqlExplorer",#ClientLocale$,"en",#PgmDirectory$)
+    field private static BBjNamespace  GroupNS! = #API!.getGroupNamespace()
+    
+    field private BBjString CurDb$
+    field private BBjString CurTbl$
+    field private BBjVector SqlHistory!
+
+
+rem /** DLGWIZ_RES SqlExplorer.arc 101 **/
+rem /** DLGWIZ_FLD_BEGIN **/
+    field public BBjNumber LBDATABASES
+    field public BBjNumber ABLES
+    field public BBjString SQL$
+    field public BBjNumber SCROLLSQL
+    field public BBjVector GRIDRESULT!
+rem /** DLGWIZ_FLD_END **/
+
+rem /** DLGWIZ_FLC_BEGIN **/
+    field protected BBjTopLevelWindow C_Form!
+    field protected BBjListButton C_LBDATABASES!
+    field protected BBjListButton C_LBTABLES!
+    field protected BBjButton C_BTNSELECT!
+    field protected BBjCEdit C_CEDSQL!
+    field protected BBjScrollBar C_SCROLLSQL!
+    field protected BBjButton C_BTNEXEC!
+    field protected BBjStandardGrid C_GRIDRESULT!
+    field protected BBjStaticText C_STRESULT!
+rem /** DLGWIZ_FLC_END **/
+
+    field public BBjTopLevelWindow Wnd!
+
+    rem /**
+    rem * Constructor SqlExplorer
+    rem */
+    method public SqlExplorer()
+        #super!("SqlExplorer.arc",101)
+
+        rem check if sysgui object still valid. if not recreate
+        #SysGui!.getContext(err=*next); sg_ok=1
+        if !sg_ok then
+            #SysGui!=#API!.openSysGui("X0")
+        fi
+
+        if stbl("+USER_LOCALE",err=*endif)<>"" then
+            #ClientLocale$ = stbl("+USER_LOCALE")
+            #Translator! = BBTranslator.getInstance("SqlExplorer",#ClientLocale$,"en",#PgmDirectory$)
+        endif
+        #Wnd!=#super!.getWndTop()
+        DialogUtils.buildDialogProperties(#Translator!,#super!.getCtrlVect())
+        if #Wnd!<>null() then
+            #initToolBar()
+            #setCallbacks()
+        endif
+    methodend
+
+    rem /**
+    rem * Method initToolBar:
+    rem * Setup toolbar
+    rem */
+    method private void initToolBar()
+rem /** DLGWIZ_BAR_BEGIN **/
+rem /** DLGWIZ_BAR_END **/
+    methodend
+
+    rem /**
+    rem * Method setCallbacks:
+    rem * Set control callbacks
+    rem */
+    method private void setCallbacks()
+rem /** DLGWIZ_CBS_BEGIN **/
+        #super!.getControlByName("BTNEXEC").setCallback(#API!.ON_BUTTON_PUSH,#this!,"BTNEXEC__ON_BUTTON_PUSH")
+        #super!.getControlByName("BTNSELECT").setCallback(#API!.ON_BUTTON_PUSH,#this!,"BTNSELECT__ON_BUTTON_PUSH")
+        #super!.getControlByName("Form").setCallback(#API!.ON_CLOSE,#this!,"Form__ON_CLOSE")
+        #super!.getControlByName("Form").setCallback(#API!.ON_RESIZE,#this!,"Form__ON_RESIZE")
+        #super!.getControlByName("Form").setCallback(#API!.ON_RESTORE,#this!,"Form__ON_RESTORE")
+        #super!.getControlByName("Form").setCallback(#API!.ON_SCREEN_RESIZE,#this!,"Form__ON_SCREEN_RESIZE")
+        #super!.getControlByName("LBDATABASES").setCallback(#API!.ON_LIST_SELECT,#this!,"LBDATABASES__ON_LIST_SELECT")
+        #super!.getControlByName("LBTABLES").setCallback(#API!.ON_LIST_SELECT,#this!,"LBTABLES__ON_LIST_SELECT")
+        #super!.getControlByName("SCROLLSQL").setCallback(#API!.ON_CONTROL_SCROLL,#this!,"SCROLLSQL__ON_CONTROL_SCROLL")
+rem /** DLGWIZ_CBS_END **/
+    methodend
+
+    rem /**
+    rem * Method doDataExchange:
+    rem * Set controls with program variables
+    rem * @param BBjNumber pInitFlag: Controls are initialized, if true
+    rem */
+    method private void doDataExchange(BBjNumber pInitFlag)
+rem /** DLGWIZ_DDX_BEGIN **/
+        #LBDATABASES=#doDDX("LBDATABASES",#LBDATABASES,pInitFlag,0)
+        #ABLES=#doDDX("LBTABLES",#ABLES,pInitFlag,0)
+        #SQL$=#doDDX("CEDSQL",#SQL$,pInitFlag,0)
+        #SCROLLSQL=#doDDX("SCROLLSQL",#SCROLLSQL,pInitFlag,0)
+        #GRIDRESULT!=#doDDX("GRIDRESULT",#GRIDRESULT!,pInitFlag,0)
+rem /** DLGWIZ_DDX_END **/
+    methodend
+
+    rem /**
+    rem * Method doModal:
+    rem * Initialize and display dialog (contains PROCESS_EVENTS)
+    rem * @see doDataExchange(BBjNumber pInitFlag)
+    rem * @see onInitDialog()
+    rem * @see onExitDialog()
+    rem * @return BBjNumber Answer: 0=Passed required fields check, 1=Dialog canceled/closed
+    rem */
+    method public BBjNumber doModal()
+
+        #API!.setCustomEventCallback("ReturnAnswer","do_return")
+        #API!.setCustomEventCallback("CancelAnswer","do_cancel")
+
+        #doDataExchange(#TRUE)
+        #super!.setAllValidated(#TRUE)
+
+        #onInitDialog()
+        #Wnd!.setVisible(#TRUE)
+
+        do_process_events:
+        process_events,err=*same
+
+        do_return:
+            #doDataExchange(#FALSE)
+
+            if #super!.getAllValidated()=0 then
+                #super!.setAllValidated(#TRUE)
+                goto do_process_events
+            endif
+
+        do_cancel:
+            #onExitDialog()
+            #Wnd!.destroy()
+
+        methodret #super!.getAnswer()
+    methodend
+
+    rem /**
+    rem * Method onInitDialog:
+    rem * Your custom initialization
+    rem */
+    method public void onInitDialog()
+rem /** DLGWIZ_INI_BEGIN **/
+        #C_Form! = cast(BBjTopLevelWindow,#super!.getControlByName("Form"))
+        #C_LBDATABASES! = cast(BBjListButton,#super!.getControlByName("LBDATABASES"))
+        #C_LBTABLES! = cast(BBjListButton,#super!.getControlByName("LBTABLES"))
+        #C_BTNSELECT! = cast(BBjButton,#super!.getControlByName("BTNSELECT"))
+        #C_CEDSQL! = cast(BBjCEdit,#super!.getControlByName("CEDSQL"))
+        #C_SCROLLSQL! = cast(BBjScrollBar,#super!.getControlByName("SCROLLSQL"))
+        #C_BTNEXEC! = cast(BBjButton,#super!.getControlByName("BTNEXEC"))
+        #C_GRIDRESULT! = cast(BBjStandardGrid,#super!.getControlByName("GRIDRESULT"))
+        #C_STRESULT! = cast(BBjStaticText,#super!.getControlByName("STRESULT"))
+rem /** DLGWIZ_INI_END **/
+    rem uncomment the next line to center window
+    rem BBWindowUtils.centerWindow(#Wnd!)
+    
+    
+    #C_LBDATABASES!.removeAllItems()
+    a$=sqllist(-1)
+    while pos($0a$=a$)
+        db$=a$(1,pos($0a$=a$)-1)
+        a$=a$(pos($0a$=a$)+1)
+        #C_LBDATABASES!.addItem(db$)
+        if #CurDb$="" then
+            #CurDb$=db$
+        fi
+    wend
+    #C_LBDATABASES!.selectIndex(0)
+    #fillTablesCombo(#CurDb$)
+    
+    #SqlHistory! = new BBjVector()
+    #C_SCROLLSQL!.setScrollPosition(0)
+    #C_SCROLLSQL!.setScrollRange(0, 0)
+    
+    if INFO(3,6)="5" then
+        #C_Form!.setTitleBarVisible(0)
+        #C_Form!.maximize()
+        #resizeControls()
+    fi
+    
+    #C_Form!.setVisible(1)
+    
+    methodend
+    
+    method private void fillTablesCombo(BBjString db$)
+    
+        #C_LBTABLES!.removeAllItems()
+        sqlopen (1)db$
+        a$=sqltables(1)
+        #CurTbl$=""
+        sqlclose (1)
+        while pos($0a$=a$)
+            t$=a$(1,pos($0a$=a$)-1)
+            a$=a$(pos($0a$=a$)+1)
+            #C_LBTABLES!.addItem(t$)
+            if #CurTbl$="" then
+                #CurTbl$=t$
+            fi
+        wend        
+        #C_LBTABLES!.selectIndex(0)
+    methodend
+    
+
+    rem /**
+    rem * Method onExitDialog:
+    rem * Your custom exit code
+    rem */
+    method public void onExitDialog()
+        #Translator!.getTranslationBundle().save()
+    methodend
+
+    rem /**
+    rem * Method postCancelAnswer:
+    rem * Set dialog answer to "canceled"
+    rem */
+    method public void postCancelAnswer()
+        #super!.setAnswer(0)
+        #API!.postCustomEvent("CancelAnswer",null())
+    methodend
+
+    rem /**
+    rem * Method postReturnAnswer:
+    rem * Set dialog answer to "normal return"
+    rem */
+    method public void postReturnAnswer()
+        #super!.setAnswer(1)
+        #API!.postCustomEvent("ReturnAnswer",null())
+    methodend
+
+
+
+    rem /**
+    rem * Method Form__ON_CLOSE:
+    rem * Event handler for the ON_CLOSE event for Form
+    rem * @param BBjCloseEvent Close
+    rem */
+    method public void Form__ON_CLOSE(BBjCloseEvent pEvent!)
+        #postCancelAnswer()
+    methodend
+
+    rem /**
+    rem * Method LBDATABASES__ON_LIST_SELECT:
+    rem * Event handler for the ON_LIST_SELECT event for LBDATABASES
+    rem * @param BBjListSelectEvent List Select
+    rem */
+    method public void LBDATABASES__ON_LIST_SELECT(BBjListSelectEvent pEvent!)
+    
+        #CurDb$= pEvent!.getSelectedItem()
+        #fillTablesCombo(#CurDb$)
+        #C_CEDSQL!.setText("")
+        #clearHistory()
+    
+    methodend
+
+    rem /**
+    rem * Method BTNSELECT__ON_BUTTON_PUSH:
+    rem * Event handler for the ON_BUTTON_PUSH event for BTNSELECT
+    rem * @param BBjButtonPushEvent Button Push
+    rem */
+    method public void BTNSELECT__ON_BUTTON_PUSH(BBjButtonPushEvent pEvent!)
+    
+        t$="SELECT TOP 100 * FROM "+ #CurTbl$
+        #C_CEDSQL!.setText(t$)
+        
+    
+    methodend
+
+    rem /**
+    rem * Method LBTABLES__ON_LIST_SELECT:
+    rem * Event handler for the ON_LIST_SELECT event for LBTABLES
+    rem * @param BBjListSelectEvent List Select
+    rem */
+    method public void LBTABLES__ON_LIST_SELECT(BBjListSelectEvent pEvent!)
+    
+        #CurTbl$ = pEvent!.getSelectedItem()
+    
+    methodend
+    
+    
+    
+    rem /**
+    rem * Method BTNEXEC__ON_BUTTON_PUSH:
+    rem * Event handler for the ON_BUTTON_PUSH event for BTNEXEC
+    rem * @param BBjButtonPushEvent Button Push
+    rem */
+    method public void BTNEXEC__ON_BUTTON_PUSH(BBjButtonPushEvent pEvent!)
+        
+        sql$=#C_CEDSQL!.getText()
+        
+        #C_STRESULT!.setText("")
+        
+        sqlopen (1)#CurDb$
+        sqlprep (1,err=sql_err)sql$
+        sqlexec (1,err=sql_err)
+        dim x$:sqltmpl(1)
+        
+        #C_GRIDRESULT!.setNumRows(0)
+        
+        h$=fattr(x$,"")
+        c=0
+        v! = new BBjVector()
+        while pos($0a$=h$)
+         c$=h$(1,pos($0a$=h$)-1)
+         h$=h$(pos($0a$=h$)+1)
+         c=c+1
+         v!.addItem(c$)
+        wend
+        #C_GRIDRESULT!.setNumColumns(c)
+        #C_GRIDRESULT!.setColumnHeaderText(v!)
+        #C_GRIDRESULT!.setFitToGrid(#C_GRIDRESULT!.AUTO_RESIZE_ALL_COLUMNS)
+        
+        
+        v1!=new BBjVector()
+        r=0
+        while 1
+        
+            x$=sqlfetch(1,end=*break)
+            r=r+1
+            for i=0 to c-1
+                v1!.addItem(field(x$,v!.getItem(i)))
+            next
+             
+        wend
+        
+        sqlclose (1)
+        
+        #C_GRIDRESULT!.setNumRows(r)
+        #C_GRIDRESULT!.setCellText(0,0,v1!)
+        #updateHistory(sql$)
+        methodret
+        
+        
+        sql_err:
+            #C_STRESULT!.setText(sqlerr(1))
+            sqlclose (1)
+    
+    methodend    
+    
+    
+    method private void updateHistory(BBjString sql$)
+   
+        if #SqlHistory!.size() then
+            lastsql$=#SqlHistory!.getItem(0)
+        fi
+        
+        if sql$<>lastsql$ then
+          #SqlHistory!.insertItem(0,sql$)
+          #C_SCROLLSQL!.setScrollRange(0, #SqlHistory!.size()-1)
+          #C_SCROLLSQL!.setScrollPosition(0)
+        fi
+        
+    methodend
+
+    method private void clearHistory()
+   
+          #SqlHistory!.clear()
+          #C_SCROLLSQL!.setScrollRange(0, 0)
+          #C_SCROLLSQL!.setScrollPosition(0)
+        fi
+        
+    methodend
+        
+
+    rem /**
+    rem * Method Form__ON_RESIZE:
+    rem * Event handler for the ON_RESIZE event for Form
+    rem * @param BBjResizeEvent Resize
+    rem */
+    method public void Form__ON_RESIZE(BBjResizeEvent pEvent!)
+        #resizeControls()
+    methodend
+
+    rem /**
+    rem * Method Form__ON_RESTORE:
+    rem * Event handler for the ON_RESTORE event for Form
+    rem * @param BBjRestoreEvent Restore
+    rem */
+    method public void Form__ON_RESTORE(BBjRestoreEvent pEvent!)
+        #resizeControls()
+    methodend
+
+    rem /**
+    rem * Method Form__ON_SCREEN_RESIZE:
+    rem * Event handler for the ON_SCREEN_RESIZE event for Form
+    rem * @param BBjScreenResizeEvent Screen Resize
+    rem */
+    method public void Form__ON_SCREEN_RESIZE(BBjScreenResizeEvent pEvent!)
+        #resizeControls()
+    methodend
+
+    rem /**
+    rem * Method SCROLLSQL__ON_CONTROL_SCROLL:
+    rem * Event handler for the ON_CONTROL_SCROLL event for SCROLLSQL
+    rem * @param BBjControlScrollEvent Control Scroll
+    rem */
+    method public void SCROLLSQL__ON_CONTROL_SCROLL(BBjControlScrollEvent pEvent!)
+        
+        p=pEvent!.getPosition()
+        sql$=#SqlHistory!.getItem(p)
+        #C_CEDSQL!.setText(sql$)
+        
+    methodend
+    
+    method private void resizeControls()
+    
+        w=#C_Form!.getWidth()
+        h=#C_Form!.getHeight()
+        #C_STRESULT!.setLocation(50,h-40)
+        #C_GRIDRESULT!.setSize(w-70,h-235)
+        #C_CEDSQL!.setSize(w-95,90)
+        #C_SCROLLSQL!.setLocation(w-45,60)
+    
+    methodend
+
+classend
+
+
+rem Test run
+if tcb(13)=0 and argc = 1 and !(BBjAPI().getRuntime().isDebugging()) and info(3,6)<>"5" then
+    new DialogWizardRun(pgm(-1))
+    release
+endif
+
+declare SqlExplorer myDialog!
+myDialog! = new SqlExplorer()
+
+rem /** DLGWIZ_SET_BEGIN **/
+myDialog!.setLBDATABASES(0)
+myDialog!.setABLES(0)
+myDialog!.setSQL("")
+myDialog!.setSCROLLSQL(0)
+v!=new BBjVector()
+myDialog!.setGRIDRESULT(v!)
+rem /** DLGWIZ_SET_END **/
+
+if myDialog!.doModal() and info(3,6)<>"5" then
+    print 'show',
+    print "Passed required fields check"
+rem /** DLGWIZ_GET_BEGIN **/
+    print "LBDATABASES=",myDialog!.getLBDATABASES()
+    print "ABLES=",myDialog!.getABLES()
+    print "SQL=",myDialog!.getSQL()
+    print "SCROLLSQL=",myDialog!.getSCROLLSQL()
+    print "GRIDRESULT=",myDialog!.getGRIDRESULT()
+rem /** DLGWIZ_GET_END **/
+    input "Press ENTER to release",dummy$
+endif
+release
+
+
+
+

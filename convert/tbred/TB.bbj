@@ -606,6 +606,12 @@ class public TB
     methodend 
 
     method public static void setKeyName(BBjString fileName$,BBjString oldKeyName$,BBjString newKeyName$)
+        ch=unt 
+        open(ch)filename$
+        declare BBjFileInfo info! 
+        info! = bbjapi().getFileSystem().getFileInfo(ch) 
+        info!.setKeyName(oldKeyName$,newKeyName$,err=*next);methodret 
+        info!.setKeyName(0,newKeyName$) 
     methodend     
      
      
@@ -620,6 +626,16 @@ class public TB
         if input$=FILL(len(input$),compareString$(1,1)) then methodret bbjapi().TRUE endif 
         not_equal: 
         methodret bbjapi().FALSE
-    methodend    
+    methodend  
+    
+    
+    method public static BBjString DSD(BBjString dev$) 
+        fid$=fid(0) 
+        if dev$=fid(0) then 
+            dev$=fid$(1,2) 
+            
+        endif 
+    methodend 
+      
 classend
 

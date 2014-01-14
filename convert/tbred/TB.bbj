@@ -610,9 +610,12 @@ class public TB
         ch=unt 
         open(ch)filename$
         declare BBjFileInfo info! 
-        info! = bbjapi().getFileSystem().getFileInfo(ch) 
-        info!.setKeyName(oldKeyName$,newKeyName$,err=*next);methodret 
+        info! = bbjapi().getFileSystem().getFileInfo(ch)
+        info!.lock() 
+        info!.setKeyName(oldKeyName$,newKeyName$,err=*next);info!.unlock();close(ch); methodret 
         info!.setKeyName(0,newKeyName$) 
+        info!.unlock()
+        close(ch)         
     methodend     
      
     method public static void setKeyName(BBjString fileName$,BBjNumber keyIndex,BBjString newKeyName$)
@@ -620,7 +623,10 @@ class public TB
         open(ch)filename$
         declare BBjFileInfo info! 
         info! = bbjapi().getFileSystem().getFileInfo(ch) 
+        info!.lock()
         info!.setKeyName(keyIndex,newKeyName$,err=*next) 
+        info!.unlock()
+        close(ch)
 REM         info!.setKeyName(0,newKeyName$) 
     methodend     
 

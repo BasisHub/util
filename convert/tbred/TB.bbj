@@ -678,17 +678,17 @@ REM         info!.setKeyName(0,newKeyName$)
         methodret fid$
     methodend 
     
-    method public static BBjString XSD(BBjNumber channel,BBjNumber func)
+    method public static BBjString XFD(BBjNumber channel,BBjNumber func)
 REM         XFD(canal_fichier,3) :  key definition data for MSORT and TISAM files
 REM         XFD(45,1)     = longueur clé principale
 REM         XFD(48,20)   = nom du tri principal
-        dim xsd$(100) 
+        dim xfd$(100) 
         declare BBjFileInfo info! 
         info! = bbjapi().getFileSystem().getFileInfo(channel)
         keyLen = #getKeyLen(info!.getKeyInfo(0).getKeySegments())        
         xfd$(45,1)=chr(keyLen)
         xfd$(48,20)=info!.getKeyName(0,err=*next)
-        methodret xsd$
+        methodret xfd$
     methodend 
     
     method public static BBjNumber getKeyLen(BBjVector keySegments!) 

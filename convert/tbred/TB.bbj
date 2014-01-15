@@ -534,7 +534,6 @@ class public TB
             
             declare BBjKeyInfo keyInfo! 
             keyInfo! = #getKeyInfo(keyChain$) 
-            escape
             info!.lock()
             info!.addKey(sortname$,keyInfo!)
             info!.unlock()

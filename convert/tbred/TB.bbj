@@ -270,7 +270,7 @@ class public TB
         let fid_tbd$(15,2)=temp$(7,2)
 
         rem disk number         
-        filepath$=tmp$(9)
+        filepath$=temp$(9)
         numdsk=#NUMDSK(filepath$)
 
         rem changed to cut filenames longer than 6 in two to mimic TB FID

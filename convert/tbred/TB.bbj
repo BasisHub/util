@@ -273,7 +273,7 @@ class public TB
 
         rem disk number 
         fid_bbj$=fid(channel)
-        numdsk=#NUMDISK(fid_bbj$(9))
+        numdsk=#NUMDSK(fid_bbj$(9))
         fid_tbd$(20,1)=str(numdsk)
         
         

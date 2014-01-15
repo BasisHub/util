@@ -272,7 +272,8 @@ class public TB
         let fid_tbd$(15,2)=temp$(7,2)
 
         rem disk number 
-        numdsk=#NUMDISK(fid(channel))
+        fid_bbj$=fid(channel)
+        numdsk=#NUMDISK(fid_bbj$(9))
         fid_tbd$(20,1)=str(numdsk)
         
         

@@ -250,15 +250,13 @@ class public TB
     method public static BBjString FID(BBjNumber channel)
 
         seterr FIDJ_err
-
         let temp$=fid(channel)
         if len(temp$)=2 then
             let fid_tbd$=""
             goto FIDJ_exit  
         fi
         
-        
-        dim fid_tbd$(22)
+        dim fid_tbd$(20)
         let fid_tbd$(4,6)=temp$(pos("/"=temp$,-1)+1)
         let fid_tbd$(10,1)=temp$(1,1)
         let rec_num=dec(temp$(3,4))
@@ -271,12 +269,23 @@ class public TB
         fi
         let fid_tbd$(15,2)=temp$(7,2)
 
-        rem disk number 
-        fid_bbj$=fid(channel)
-        numdsk=#NUMDSK(fid_bbj$(9))
-        fid_tbd$(20,1)=str(numdsk)
-        
-        
+        rem disk number         
+        filepath$=tmp$(9)
+        numdsk=#NUMDSK(filepath$)
+
+        rem changed to cut filenames longer than 6 in two to mimic TB FID
+        if numdsk=-1 then 
+          filepath$=PAD(filepath$,MAX(6,len(filepath$))," ")
+          fid_tbd$(4,6)=filepath$
+          fid_tbd$(20,1)=chr(0)  
+          fid_tbd$=fid_tbd$+str(filepath$(7),err=*next)
+        else 
+          fid_tbd$(20,1)=chr(numdsk)
+          filename$=filepath$(pos("/"=filepath$,-1,1)+1)
+          filename$=PAD(filename$,MAX(6,len(filename$))," ")
+          fid_tbd$(4,6)=filename$
+          fid_tbd$=fid_tbd$+str(filename$(7),err=*next)         
+        endif 
         FIDJ_exit:
         methodret fid_tbd$+temp$
 
@@ -513,7 +522,7 @@ class public TB
     rem * This string is used to create files 
     rem */
     method public static BBjNumber NUMDSK(BBjString filepath$)
-        numdsk=0
+        numdsk=-1
         FOR dsk=0 to 9
             repdsk$=STBL("DSK_D"+str(dsk),err=labnext)
             if filepath$(1,len(repdsk$))=repdsk$ then numdsk=dsk; break

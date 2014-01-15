@@ -258,7 +258,14 @@ class public TB
         
         dim fid_tbd$(20)
         let fid_tbd$(4,6)=temp$(pos("/"=temp$,-1)+1)
-        let fid_tbd$(10,1)=temp$(1,1)
+        rem added for infodev 
+        rem returns TB filetype 
+        rem vkeyed returns msort 
+        switch 1
+           case temp$(1,1)=$0D$;fid_tbd$(10,1)=$06$;break 
+           case default;fid_tbd$(10,1)=temp$(1,1);break
+        swend
+
         let rec_num=dec(temp$(3,4))
         let fid_tbd$(12,3)=bin(rec_num)
         let key_size=dec(temp$(2,1))
@@ -287,7 +294,7 @@ class public TB
           fid_tbd$=fid_tbd$+str(filename$(7),err=*next)         
         endif 
         FIDJ_exit:
-        methodret fid_tbd$+temp$
+        methodret fid_tbd$
 
         FIDJ_err:
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err

@@ -83,22 +83,22 @@ class public TB
 
         seterr CVTJ_err
 
-        if valore>8192 then
+        if valore>=8192 then
             let stringa$=swap(stringa$,$08$)
             valore=valore-8192
         fi
         
-        if valore>4096 then
+        if valore>=4096 then
             let stringa$=cvs(stringa$,8)
             valore=valore-4096
         fi
         
-        if valore>2048 then
+        if valore>=2048 then
             let stringa$=tbl(stringa$,$7F$)
             valore=valore-2048
         fi
 
-       if valore>1024 then
+       if valore>=1024 then
             if len(stringa$)=0 then
                 valore=valore-1024
             fi
@@ -112,22 +112,21 @@ class public TB
             valore=valore-1024
         fi
         
-        if valore>512 then
+        if valore>=512 then
             let stringa$=swap(stringa$,$02$)
             valore=valore-512
         fi
 
-        if valore>256 then
+        if valore>=256 then
             valore=valore-256
         fi
 
-
-        if valore>128 then
+        if valore>=128 then
         let stringa$=cvs(stringa$,2)
             valore=valore-128
         fi
 
-       if valore>64 then
+       if valore>=64 then
             if len(stringa$)=0 then
                 valore=valore-64
             fi
@@ -142,22 +141,22 @@ class public TB
             valore=valore-64
         fi
 
-        if valore>32 then
+        if valore>=32 then
             let stringa$=cvs(stringa$,4)
             valore=valore-32
         fi
         
-        if valore>16 then
+        if valore>=16 then
             let stringa$=cvs(stringa$,32)
             valore=valore-16
         fi
         
-        if valore>8 then
+        if valore>=8 then
             let stringa$=cvs(stringa$,1)
             valore=valore-8
         fi
 
-        if valore>4 then
+        if valore>=4 then
             let stringa$=cvs(stringa$,16)
             if len(stringa$)=0 then
                 valore=valore-4
@@ -172,7 +171,7 @@ class public TB
             valore=valore-4
         fi
 
-        if valore>2 then
+        if valore>=2 then
             if len(stringa$)=0 then
                 valore=valore-2
             fi

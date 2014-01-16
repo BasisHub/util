@@ -82,7 +82,7 @@ class public TB
     method public static BBjString CVT(BBjString stringa$, BBjNumber valore)
 
         seterr CVTJ_err
-
+        if stringa$="" then methodret stringa$ endif 
         if valore>=8192 then
             let stringa$=swap(stringa$,$08$)
             valore=valore-8192

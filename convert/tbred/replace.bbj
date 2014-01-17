@@ -41,8 +41,11 @@ if z!.contains("FINPUT") z! = StringReplace.replaceFInput(z!) endif
 rem remove END from REMOVE!
 if z!.contains("REMOVE") then z!=StringReplace.removeENDInStatement(z!,"REMOVE") endif 
 
+rem if z!.contains("SHELL") then escape endif 
 rem replace open mode? mode shell with open on | 
-z! = z!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   
+REM z! = z!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
+z! = z!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
+ 
 
 rem raplce ALL """" 
 z! = StringReplace.replaceAll(z!) 
@@ -58,6 +61,8 @@ z! = StringReplace.replaceLike(z!)
 rem replace WindowShape 
 z! = StringReplace.replaceWindowShape(z!) 
 
+
+
 rem replace SYSTEM with scall 
 if z!.contains("SYSTEM") then z! = z!.replaceAll("(.*)(SYSTEM)","$1 dummy\=scall\(")+")" endif
 
@@ -67,7 +72,7 @@ if z!.contains("ADDSORT") then z!=StringReplace.replaceAddSort(z!) endif
 
 
 rem can use opt as variable replace mode?= by opt= 
-z! = z!.replaceAll("MODE\?\=","opt\=") 
+z! = z!.replaceAll("MODE\?\=","OPT\=") 
 
 rem replace DSK system var but not in REPDSK method 
 rem z! = z!.replaceAll("(?<=\=\ )(DSK)","TB.REPDSK(DSK)") 
@@ -77,6 +82,10 @@ z! = StringReplace.replaceWinGet(z!)
 
 rem replace WIN GET INFO 
 z! = StringReplace.replaceWinGetInfo(z!) 
+
+rem replace String DSK 
+if z!.matches(".*?\bSTRING\b.*?") then z! = z!.replaceAll("(STRING\ *?)(\w+.*?)\,(.*?)(\,0)","$1 TB.REPDSK\($3\)+$2") endif
+
 
 z$=z!
 exit 
@@ -116,11 +125,19 @@ rem         escape
         reclen$=createString$(beginVar,endVar) 
 
         beginVar=pos(","=createString$,1,4)+1
-        endVar = pos(","=createString$,-1,2)-beginVar
-        dsknum$=createString$(beginVar,endVar)
-rem         if pos("NUM(P9$"=z$)>0 then escape
-
-                if keyName$>"" then 
+        tmp$=createString$(beginVar)
+        ok=1
+        posChar=0
+        for i=1 to len(tmp$)
+            if tmp$(i,1)="(" then ok=0;continue 
+            if tmp$(i,1)=")" then ok=1;continue 
+            if ok and tmp$(i,1)="," then posChar=i;break
+        next i 
+        
+        dsknum$=createString$(beginVar,poschar-1)
+        endVar=poschar
+        
+        if keyName$>"" then 
             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
         else 
             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$
@@ -152,8 +169,18 @@ replaceINDEXEDSORT:
         reclen$=createString$(beginVar,endVar) 
 
         beginVar=pos(","=createString$,1,3)+1
-        endVar = pos(","=createString$,1,4)-beginVar
-        dsknum$=createString$(beginVar,endVar)
+        tmp$=createString$(beginVar)
+        ok=1
+        posChar=0
+        for i=1 to len(tmp$)
+            if tmp$(i,1)="(" then ok=0;continue 
+            if tmp$(i,1)=")" then ok=1;continue 
+            if ok and tmp$(i,1)="," then posChar=i;break
+        next i 
+        
+        dsknum$=createString$(beginVar,poschar-1)
+        endVar=poschar
+
 
         createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$
 
@@ -167,9 +194,9 @@ handleFileCreate:
         if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
         if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
         if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
-        if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif        
+        if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif 
 exit 
-
+ 
 
 REM 
 REM replaceADDSORT: 
@@ -384,23 +411,36 @@ rem      escape
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
-        p! = Pattern.compile("(\w+\$.*?|\"".*"")(\=\ *ALL\ *)(\w+\$.*?\ |\"".*"")")
+        p! = Pattern.compile("(?:IF)(.*?\ *?\bALL\b.*?)\ *?(?:THEN|OR|AND)")
         declare Matcher m!
         m! = p!.matcher(z!)
 
-                        declare String beginLine!
+        declare String beginLine!
         declare String endLine!  
         beginLine! = new String("") 
         endLine! = new String("") 
         startLine=0
+        declare String statement!
+        statement! = "" 
         while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(3))
-            newLine! = newLine!+beginLine!+" TB.ALLBBj("+m!.group(1)+","+m!.group(3)+")"
-            startLine=m!.end(3)
+            
+            startExpr = 0
+            statement! = m!.group(1)
+            if statement!.matches(".*(\bAND\b|\bOR\b|\bIF\b).*") then 
+               startExpr= MAX(statement!.lastIndexOf(" AND ")+5,statement!.lastIndexOf(" OR ")+4)
+               startExpr= MAX(startExpr,statement!.lastIndexOf(" IF ")+4)
+            endif 
+            
+            statement!=statement!.substring(startExpr) 
+            beginLine! = z!.substring(startLine,startExpr+m!.start(1))
+            endline! = z!.substring(m!.end(1))
+
+            newLine! = newLine!+beginLine!+statement!.replaceAll("(.*?)(?:\ *?\=\ *?ALL)(.*)"," TB.ALLBBj($1,$2)") 
+            startLine=m!.end(1)
         wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
+            if newLine!.matches(".*?(?:IF).*?\bALL\b.*?(?:THEN|OR|AND).*") then newLine!=#replaceAll(newLine!) endif
             methodret newLine!
     replaceAllError: 
     rem donoting         
@@ -581,8 +621,7 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
-        p! = Pattern.compile("(.*)(ADDSORT)\ (.*?)\,(.*?)\:(.*?)\,(.*?)\,(.*)")
-
+        p! = Pattern.compile("(ADDSORT)\ (.*?)\,(.*?)\:(.*?)\,([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)")
         declare Matcher m!
         m! = p!.matcher(z!)
 
@@ -594,11 +633,13 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
 
         while m!.find() 
             beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(7))
-            keyString!=m!.group(5) 
+            endline! = ""
+            keyString!=m!.group(4) 
             keyString! = keyString!.replaceAll("""","""""")            
-            newLine! = m!.group(1)+"TB.ADDSORT(TB.DSKNUM("+m!.group(6)+")+"+m!.group(3)+","+m!.group(4)+","""+keyString!+""")"
-        wend
+
+            newLine! = newLine!+beginLine!+"TB.ADDSORT(TB.DSKNUM("+m!.group(5)+")+"+m!.group(2)+","+m!.group(3)+","""+keyString!+""")"
+            if z!.substring(m!.end(5)).indexOf(";")>-1 then startLine=m!.end(5)+m!.group(5).indexOf(";")+1 endif 
+            wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
             methodret newLine!
@@ -640,8 +681,8 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
     rem donoting         
     methodret z!     
     methodend 
-    
-    method public static String replaceWinGetInfo(String z!) 
+
+        method public static String replaceWinGetInfo(String z!) 
         seterr replaceWinGetInfoError
         declare String newLine! 
         newLine! = new String("") 
@@ -674,5 +715,51 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
     rem donoting         
     methodret z!     
     methodend 
+        
+
+REM /*
+    REM *
+    REM *  replace string = IFF47 String$(x,y)="t" LEN(A$)>=50 AND A$(50,1)="t" TB.ALLBBJ(string,compareString)
+    REM * 
+    REM */ 
+    method public static String replaceIFF47(String z!) 
+        seterr replaceAllError
+        declare String newLine! 
+        newLine! = new String("") 
+        declare Pattern p!     
+        p! = Pattern.compile("(?:IF)(.*?)(?:THEN|IF)")
+        declare Matcher m!
+        m! = p!.matcher(z!)
+
+        declare String beginLine!
+        declare String endLine!  
+        beginLine! = new String("") 
+        endLine! = new String("") 
+        startLine=0
+        declare String statement!
+        statement! = "" 
+        while m!.find() 
+            escape
+            startExpr = 0
+            statement! = m!.group(1)
+            if statement!.matches(".*(\bAND\b|\bOR\b).*") then 
+               startExpr= MAX(statement!.lastIndexOf(" AND ")+5,statement!.lastIndexOf(" OR ")+4)
+            endif 
+            
+            statement!=statement!.substring(startExpr) 
+            beginLine! = z!.substring(startLine,startExpr+m!.start(1))
+            endline! = z!.substring(m!.end(1))
+
+            newLine! = newLine!+beginLine!+statement!.replaceAll("(.*?)(?:\ *?\=\ *?ALL)(.*)"," TB.ALLBBj($1,$2)") 
+            startLine=m!.end(1)
+        wend
+            if newLine!.isEmpty() then methodret z! endif 
+            newLine!=newLine!+endLine!
+            methodret newLine!
+    replaceAllError: 
+    rem donoting         
+    methodret z! 
+    methodend 
     
-classend 
+
+    classend 

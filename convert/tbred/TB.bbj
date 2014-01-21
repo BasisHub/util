@@ -613,8 +613,8 @@ class public TB
                     m_desc!=bbjapi().FALSE
                 endif
             endif 
-
-            keySegment! = #fileSystem!.makeKeySegment(m_field,m_pos,m_len,m_desc!,BBjAPI().FALSE)
+            rem m_pos add 1 at keySegmentCreation
+            keySegment! = #fileSystem!.makeKeySegment(m_field,m_pos-1,m_len,m_desc!,BBjAPI().FALSE)
             keySegments!.add(keySegment!)            
             i=i+1
         wend 
@@ -627,7 +627,18 @@ class public TB
     rem /*
     rem * remsort 
     rem */ 
-    method public static void REMSORT()
+    method public static void REMSORT(BBjString fileName$,BBjString sortName$)
+        seterr RemSortError
+        declare BBjFileInfo info! 
+        ch=unt 
+        open(ch)fileName$ 
+        info! = bbjapi().getFileSystem().getFileInfo(ch) 
+        info!.lock(ch) 
+        info!.dropKey(sortName$)
+        info!.unlock(ch)
+        methodret 
+        RemSortError: 
+            System.out.println("error removing index:"+fileName$+ " "+sortName$)
     methodend 
 
     rem change keyname or set keyname for first key 

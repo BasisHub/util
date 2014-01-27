@@ -568,7 +568,7 @@ class public TB
     method public static void REMSORT(BBjString file$, BBjString sortname$)
          seterr remsort_error
             declare BBjFileInfo info! 
-
+            
             ch=unt;open(ch)file$ 
             info! = #fileSystem!.getFileInfo(ch) 
             
@@ -633,9 +633,10 @@ class public TB
         ch=unt 
         open(ch)fileName$ 
         info! = bbjapi().getFileSystem().getFileInfo(ch) 
-        info!.lock(ch) 
+        info!.lock() 
         info!.dropKey(sortName$)
-        info!.unlock(ch)
+        info!.unlock()
+        close(ch)
         methodret 
         RemSortError: 
             System.out.println("error removing index:"+fileName$+ " "+sortName$)

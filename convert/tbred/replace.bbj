@@ -23,7 +23,7 @@ rembbj:
 declare String z! 
 z! = z$ 
 
-if z!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b).*") then call "replace.bbj::handleFileCreate",Z$ endif 
+if z!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\ *?.*?\,.*?\,.*?,.*?\,.*?(\;|$).*") then call "replace.bbj::handleFileCreate",Z$ endif 
 
 
 z!=z$
@@ -41,7 +41,6 @@ if z!.contains("FINPUT") z! = StringReplace.replaceFInput(z!) endif
 rem remove END from REMOVE!
 if z!.contains("REMOVE") then z!=StringReplace.removeENDInStatement(z!,"REMOVE") endif 
 
-rem if z!.contains("SHELL") then escape endif 
 rem replace open mode? mode shell with open on | 
 REM z! = z!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
 z! = z!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
@@ -74,40 +73,58 @@ rem replace RENAME
 if z!.contains("RENAME") then z!=StringReplace.replaceRename(z!) endif 
 
 rem replace GETSCREEN
-if z!.matches(".*WIN\?\(GET\ *?SCREEN\)?).*") then 
-rem    escape
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?SCREEN\)?)(\;|$)","CALL ""DB%WIN"",""GETSCREEN"",$2$4")
+if z!.matches(".*WIN\?\(GET\ *?SCREEN\).*") then 
+    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?SCREEN\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETSCREEN"",$2$4")
 endif 
 
 rem replace GET ROW 
 if z!.matches(".*?WIN\?\(GET\ *?ROW\ *?\,.*") then 
-    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?ROW\ *?\,(.*?)\)?)(\;|$)","CALL ""DB%WIN"",""GETROW"",$4$5")
+    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?ROW\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETROW"",$4$5")
 endif 
 
 rem replace GET CHAR 
 if z!.matches(".*?WIN\?\(GET\ *?CHAR\ *?\,.*") then 
-    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CHAR\ *?\,(.*?)\)?)(\;|$)","CALL ""DB%WIN"",""GETCHAR"",$4$5")
+    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CHAR\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCHAR"",$4$5")
 endif 
 
 rem replace WIN GET 
-if z!.matches(".*?WIN\?\(GET\ *?GET\ *?\).*") then 
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?\))(\;|$)","CALL ""DB%WIN"",""GET"",$2$4")
+if z!.matches(".*?WIN\?\(GET\ *?\).*") then 
+    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GET"",$2$4")
 endif  
 
 rem repalce WINDOW PUT COLOR 
 if z!.matches(".*?WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\)(\;|$)","CALL ""DB%WIN"",""PUTCOLOR"",$1$2")
+    z!=z!.replaceAll("WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCOLOR"",$1$2")
 endif 
 
 rem replace WINDOW PUT
 if z!.matches(".*?WINDOW\ *?PUT\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?\((.*?)\)(\;|$)","CALL ""DB%WIN"",""PUT"",$1$2")
+    z!=z!.replaceAll("WINDOW\ *?PUT\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUT"",$1$2")
+endif 
+
+rem repalce WINDOW PUT ATTR CHAR 
+if z!.matches(".*?WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\).*") then 
+    z!=z!.replaceAll("WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTATTR"",$1$2")
+endif 
+
+rem repalce WINDOW PUT CHAR 
+if z!.matches(".*?WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\).*") then 
+    z!=z!.replaceAll("WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCHAR"",$1$2")
 endif 
 
 
+rem replace get CURSOR PHY 
+if z!.matches(".*?WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\).*") then 
+    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSORPHYSICAL"",$2$4")                                   
+endif 
 
+rem replace get CURSOR  
+if z!.matches(".*?WIN\(GET\ *?CURSOR\ *?\).*") then 
+    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\(GET\ *?CURSOR\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSOR"",$2$4")                                   
+endif 
 
-
+rem replace close(0) 
+z! = z!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
 
 
 
@@ -146,9 +163,6 @@ z! =z!.replaceAll("\bSEP\b(?!\$)","SEP\$")
 rem remove err in START 
 z!=z!.replaceAll("(START\ *?\d{1,})(,ERR=\d{4,}\,)","$1,")  
 
-
-
-REM if pos("DB%AFFSC"=fid(1))>0 and z!.startsWith("03456") then escape endif 
 rem raplce IFF47
 REM z!=StringReplace.replaceIFF47(z!)
 
@@ -170,16 +184,15 @@ replaceVKEYEDDIRECT:
         beginVar=pos(filetype$=createString$)+len(filetype$) 
         endVar = pos(","=createString$)-beginVar
         file$=createString$(beginVar,endVar)
-rem         escape
         beginVar=pos(","=createString$,1,1)+1
         endVar=pos(","=createString$,1,2)-beginVar 
         keyChainString$=createString$(beginVar,endVar)
-
-        if pos(":"=keyChainString$)>0 then 
+        
+        if pos(":["=keyChainString$)>0 then 
           beginVar=1
-          endVar = pos(":"=keyChainString$,1,1)-beginVar
+          endVar = pos(":["=keyChainString$,1,1)-beginVar
           keyName$=keyChainString$(beginVar,endVar)                
-          beginVar=pos(":"=keyChainString$)+1
+          beginVar=pos(":["=keyChainString$)+1
           keyChain$=keyChainString$(beginVar)
         else 
           keyName$="" 
@@ -201,14 +214,20 @@ rem         escape
             if ok and tmp$(i,1)="," then posChar=i;break
         next i 
 
-                dsknum$=createString$(beginVar,poschar-1)
+        dsknum$=createString$(beginVar,poschar-1)
         endVar=poschar
 
-                if keyName$>"" then 
-            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
+
+        errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
+        if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+              errExit$=""
+          endif  
+        VNOERR:
+        if keyName$>"" then 
+            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
         else 
             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$
-            if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
+            if fileType$="VKEYED" then createString$=createString$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
         endif 
         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
         z$=beginLine$+createString$+endline$
@@ -231,7 +250,7 @@ replaceINDEXEDSORT:
         endVar=pos(","=createString$,1,2)-beginVar 
         keyChain$=createString$(beginVar,endVar)
 
-         beginVar=pos(","=createString$,1,2)+1
+        beginVar=pos(","=createString$,1,2)+1
         endVar = pos(","=createString$,1,3)-beginVar
         reclen$=createString$(beginVar,endVar) 
 
@@ -245,11 +264,18 @@ replaceINDEXEDSORT:
             if ok and tmp$(i,1)="," then posChar=i;break
         next i 
 
-                dsknum$=createString$(beginVar,poschar-1)
+        dsknum$=createString$(beginVar,poschar-1)
         endVar=poschar
 
 
-        createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$
+
+          errExit$=str(createString$(pos(","=createString$,-1,1)),err=INOERR) 
+          if str(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+              errExit$=""
+          endif 
+        INOERR: 
+
+                createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$+errExit$
 
         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceINDEXEDSORT",endline$,filetype$ endif
         z$=beginLine$+createString$+endline$
@@ -351,7 +377,6 @@ REM     p! = Pattern.compile("\w+(\ *\()")
         m! = p!.matcher(z!)
         declare String keyword! 
         while m!.find() 
-rem         escape
         keyword! = m!.group(0)
         keyword! = keyword!.substring(0,keyword!.length()-1).trim()  
         rem check for methods 
@@ -383,8 +408,7 @@ REM         System.out.println("word:"+m!.toString())
         wend
         methodret z!
         replaceBracketsError: 
-REM           if pos("StringIndexOutOfBoundsException"=errmes(-1)) >0 then System.out.println(z!);methodret z! 
-rem           escape
+          if pos("StringIndexOutOfBoundsException"=errmes(-1)) >0 then System.out.println(z!);methodret z! 
     methodend 
 
    method public static String removeENDInStatement(String z!,String keyword!) 
@@ -405,7 +429,6 @@ rem           escape
       else 
         statement! = statement!.substring(0,beginEnd)+statement!.substring(statement!.indexOf(",",beginEnd)+1) 
       endif
-rem      escape
       if endline!.contains(keyword!) then endline!=#removeENDInStatement(endline!,keyword!) 
       z!=beginLine!+statement!+endline!
 
@@ -701,13 +724,8 @@ REM             System.out.println(z!)
     method public static String replaceRename(String z!) 
         seterr replaceRenameError
         declare String newLine! 
-REM         escape
         m_error$=CPL(z!,err=*next);methodret z! 
-rem         if m_error$(1,LEN("!ERROR=20"))<>"!ERROR=20" then methodret z!
-
-REM                 escape
-
-                newLine! = new String("") 
+        newLine! = new String("") 
         declare Pattern p!     
         p! = Pattern.compile("(RENAME)\ (.*?)(?:\;|$)")
         declare Matcher m!
@@ -727,7 +745,6 @@ REM                 escape
             endline! = ""
 
             vec! = #splitExpression(m!.group(2)) 
-rem            escape
             newLine! = newLine!+beginLine!+"RENAME TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(1))+",TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(2))
             if z!.length()>=m!.end(2) then endline=m!.end(2) endif 
             startline=m!.end(2)
@@ -747,7 +764,7 @@ rem             if newLine!.isEmpty() then methodret z! endif
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
-        p! = Pattern.compile("(SYSTEM)\ (.*?)(?:$)")
+        p! = Pattern.compile("(SYSTEM)\ (.*?)(\;|$)(?=(?:(?:[^""]*""){2})*[^""]*$)")
         declare Matcher m!
         m! = p!.matcher(z!)
 
@@ -876,7 +893,6 @@ REM /*
             m1! = p1!.matcher(statement!)
             declare String myStatement!
             myStatement! = ""
-REM             escape
             beginZ! = z!.substring(startLine,m!.start(1))
             endZ! = z!.substring(m!.end(1))
             startLine=0

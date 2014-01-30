@@ -4,9 +4,9 @@ class public TB
     field public static BBjFileSystem fileSystem! = bbjapi().getFileSystem() 
 
     method public static BBjNumber DTN(BBjString dateval$, BBjString datemask$)
-
         seterr DTNJ_err
-
+        prc=tcb(14)
+        PRECISION 8
         if num(dateval$)<=0 or len(dateval$)<>len(datemask$) then
             goto DTNJ_err
         fi
@@ -17,7 +17,7 @@ class public TB
             let dt$=dt$+dateval$(x,4), mk$=mk$+"%Yl", datemask$(x,4)="xxxx"
         fi
 
-                let x=pos("YY"=datemask$)
+        let x=pos("YY"=datemask$)
         if x<>0 then
             if num(dateval$(x,2))>50 then
                 let dt$=dt$+"19"+dateval$(x,2)
@@ -40,24 +40,54 @@ class public TB
         else
             let dt$=dt$+"01", mk$=mk$+"%Dz"
         fi
-
-        methodret jul(dt$,mk$)-1721423
-
+        
+        datedec=0
+        
+        let x=pos("HH"=datemask$)
+        if x<>0 then
+            let datedec=num(dateval$(x,2))/24
+        fi
+        
+        let x=pos("MI"=datemask$)
+        if x<>0 then
+            let datedec=datedec+num(dateval$(x,2))/24/60
+        fi
+        
+        let x=pos("SS"=datemask$)
+        if x<>0 then
+            let datedec=datedec+num(dateval$(x,2))/24/60/60
+        fi
+        
+        PRECISION prc
+        dtn = jul(dt$,mk$)-1721423
+        methodret dtn+datedec
+        
         DTNJ_err:
+        PRECISION prc
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
 
     methodend
 
     method public static BBjString NTD(BBjNumber dateval, BBjString datemask$)
-
+    
         seterr NTDJ_err
-
+              
+        if dateval=0 then 
+            dateval=JUL(0,0,0)-1721423
+            datedec=TIM
+        else    
+            datedec=dateval
+            dateval=round(dateval,0)
+            datedec=datedec-dateval
+            datedec=datedec*24   
+        endif
+   
         let x=pos("YYYY"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%Yl"+datemask$(X+4)
         fi
 
-                let x=pos("YY"=datemask$)
+        let x=pos("YY"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%Yz"+datemask$(X+2)
         fi
@@ -71,12 +101,30 @@ class public TB
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%Dz"+datemask$(X+2)
         fi
-
-                methodret date(dateval+1721423:datemask$)
-
+        
+        let x=pos("HH"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%Hz"+datemask$(X+2)
+        fi
+        
+        let x=pos("MI"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%mz"+datemask$(X+2)
+        fi
+        
+        let x=pos("SS"=datemask$)
+        if x<>0 then
+            let datemask$=datemask$(1,x-1)+"%sz"+datemask$(X+2)
+        fi
+        
+        if datedec>0 
+            ntd$=date(dateval+1721423,datedec:datemask$)
+        else  
+            ntd$=date(dateval+1721423:datemask$)
+        endif 
+        methodret ntd$
         NTDJ_err:
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
-
     methodend
 
     method public static BBjString CVT(BBjString stringa$, BBjNumber valore)
@@ -713,3 +761,7 @@ REM         XFD(48,20)   = nom du tri principal
         methodret keyLen
     methodend 
 classend
+
+
+
+rem #TODO: add TB.killSession to kill  another session replace RELEASE XY$ -> TB.killSession(XY$)

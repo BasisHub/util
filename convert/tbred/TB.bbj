@@ -7,9 +7,9 @@ class public TB
         seterr DTNJ_err
         prc=tcb(14)
         PRECISION 8
-        if num(dateval$)<=0 or len(dateval$)<>len(datemask$) then
-            goto DTNJ_err
-        fi
+REM         if num(dateval$)<=0 or len(dateval$)<>len(datemask$) then
+REM             goto DTNJ_err
+REM         fi
         let dt$=$$, mk$=$$, datemask$=cvs(datemask$,4)
 
                 let x=pos("YYYY"=datemask$)

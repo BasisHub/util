@@ -3,6 +3,29 @@ class public TB
 
     field public static BBjFileSystem fileSystem! = bbjapi().getFileSystem() 
 
+    method public static BBjNumber UNT0(BBjString fichier$)
+	canal=0
+	SETERR UNT_END
+	C=UNT; OPEN (C,ERR=UNT_END) fichier$
+	fichier$=CVS(FID(C)(9),2)
+	CLOSE(C)
+	lcan$=CHN
+	i=1
+	WHILE (i < LEN(LCAN$) )
+		canalt=DEC($00$+lcan$(i,2))
+		if canalt > 0 then
+			fichier0$ = cvs(FID(canalt)(9),2)
+			if (fichier$ = fichier0$) then
+				canal=canalt
+				break
+			fi
+		fi
+		i=i+2
+	WEND
+	UNT_END:
+	methodret canal
+    methodend
+
     method public static BBjNumber DTN(BBjString dateval$, BBjString datemask$)
         seterr DTNJ_err
         prc=tcb(14)
@@ -97,6 +120,13 @@ REM         fi
             let datemask$=datemask$(1,x-1)+"%Mz"+datemask$(X+2)
         fi
 
+	let x=pos("DDD"=datemask$)
+	if x<>0 then
+		annee$=TB.NTD(dateval,"YYYY")	
+		dateinit=TB.DTN(annee$+"0101","YYYYMMDD")
+		quantieme=dateval-dateinit+1
+		datemask$=datemask$(1,x-1)+str(quantieme:"000")+datemask$(x+3)
+	fi
         let x=pos("DD"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%Dz"+datemask$(X+2)
@@ -300,8 +330,8 @@ REM         fi
 
         seterr FIDJ_err
         let temp$=fid(channel)
-        if len(temp$)=2 then
-            let fid_tbd$=""
+        if len(temp$)=2 or len(temp$)=3 then
+            let fid_tbd$=temp$
             goto FIDJ_exit  
         fi
         
@@ -558,22 +588,22 @@ REM         fi
     rem * INFODEV, Christophe RICHARD
     rem * This function is design to simulate the Tbred logical disk
     rem * in the config.bbx we add some global vars like
-    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
-    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
+    rem * SET !DSK_D0=/infodev/tmp/UTILBBJ/
+    rem * SET !DSK_D4=/infodev/tmp/IFAGIV4/
     rem * ...
     rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
     rem * This string is used to create files 
     rem */
     method public static BBjString REPDSK(BBjNumber numdsk)
-        methodret STBL("DSK_D"+str(numdsk))
+        methodret STBL("!DSK_D"+str(numdsk))
     methodend
 
     rem /*
     rem * INFODEV, Christophe RICHARD
     rem * This function is design to simulate the Tbred logical disk
     rem * in the config.bbx we add some global vars like
-    rem * SET DSK_D0=/infodev/tmp/UTILBBJ/
-    rem * SET DSK_D4=/infodev/tmp/IFAGIV4/
+    rem * SET !DSK_D0=/infodev/tmp/UTILBBJ/
+    rem * SET !DSK_D4=/infodev/tmp/IFAGIV4/
     rem * ...
     rem * TB.REPDSK(DSK) is used to get the string directory from a number of disq
     rem * This string is used to create files 
@@ -581,8 +611,8 @@ REM         fi
     method public static BBjNumber NUMDSK(BBjString filepath$)
         numdsk=-1
         FOR dsk=0 to 9
-            repdsk$=STBL("DSK_D"+str(dsk),err=labnext)
-            if filepath$(1,len(repdsk$))=repdsk$ then numdsk=dsk; break
+            repdsk$=STBL("!DSK_D"+str(dsk),err=labnext)
+            if pad(filepath$,len(repdsk$))=repdsk$ then numdsk=dsk; break
             labnext:
         NEXT dsk
         methodret numdsk
@@ -731,12 +761,18 @@ REM         info!.setKeyName(0,newKeyName$)
     
     
     method public static BBjString DSD(BBjString dev$) 
-        dim fid$(72)
-        fid$(1)=fid(0) 
-        if dev$=fid(0) then 
-            dev$=fid$(1,2) 
-        endif 
-        fid$(11,8)=stbl("!ID_TERM",err=*next)
+	if #LIKE(dev$,"D?") then
+        	dim fid$(86)
+		fid$(1,2)=dev$
+		fid$(23)=STBL("!DSK_"+dev$)
+	else
+        	dim fid$(72)
+        	fid$(1)=fid(0) 
+        	if dev$=fid(0) then 
+            		dev$=fid$(1,2) 
+        	endif 
+        	fid$(11,8)=stbl("!ID_TERM",err=*next)
+	endif
         methodret fid$
     methodend 
     

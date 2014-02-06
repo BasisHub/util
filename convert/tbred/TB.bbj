@@ -547,6 +547,7 @@ REM         fi
         rem map [[] to \[
         rem replace * par .*
         rem */ 
+        b! = b!.replaceAll("\\","\\\\")
         b! = b!.replaceAll("\[\*\]","\\*") 
         b! = b!.replaceAll("\[\?\]","\\?") 
         b! = b!.replaceAll("(?<!\\)\?",".")  

@@ -547,11 +547,14 @@ REM         fi
         rem map [[] to \[
         rem replace * par .*
         rem */ 
+        b! = b!.replaceAll("\\","\\\\")
         b! = b!.replaceAll("\[\*\]","\\*") 
         b! = b!.replaceAll("\[\?\]","\\?") 
         b! = b!.replaceAll("(?<!\\)\?",".")  
         b! = b!.replaceAll("\[\[\]","\\[") 
         b! = b!.replaceAll("(?<!\\)\*","\.\*") 
+        b! = b!.replaceAll("\(","\\\(")
+        b! = b!.replaceAll("\)","\\\)")
         methodret a!.matches(b!,err=*next)
         methodret BBjAPI().FALSE
     methodend 
@@ -800,8 +803,28 @@ REM         XFD(48,20)   = nom du tri principal
         next i
         methodret keyLen
     methodend 
-classend
+    
+     method public static void killSession(BBjString ses$) 
+        seterr killError 
+        if ses$="" then methodret 
+        declare BBjVector sessions!  
+        
+        sessions! = bbjapi().getSessionInfos()
+        
+        for i=0 to sessions!.size()-1 
+            if pos(ses$=cast(BBjSessionInfo, sessions!.get(i)).getIPAddress())>0 then 
+                bbjapi().killSession(cast(BBjSessionInfo, sessions!.get(i)),"admin","admin123")
+                methodret
+            endif 
+        next i
+        methodret
+        killError: 
+        System.out.println("Error killing session"+str(err)+str(tcb(5)))
+    methodend 
+    
+    
+    classend
+
+   
 
 
-
-rem #TODO: add TB.killSession to kill  another session replace RELEASE XY$ -> TB.killSession(XY$)

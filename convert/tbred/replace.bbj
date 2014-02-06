@@ -7,6 +7,7 @@ use java.util.regex.Pattern
 use java.util.regex.Matcher
 use java.util.LinkedHashMap
 use org.apache.commons.lang3.StringUtils
+use java.lang.reflect.Array
 
 replace:
 enter z$ 
@@ -22,6 +23,11 @@ rembbj:
 
 declare String z! 
 z! = z$ 
+
+if z!.contains("<BBJ REM") then 
+    z! = z!.replaceAll("(\d{4,})\ *?REM","$1 ")
+endif 
+
 
 if z!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\ *?.*?\,.*?\,.*?,.*?\,.*?(\;|$).*") then call "replace.bbj::handleFileCreate",Z$ endif 
 
@@ -112,7 +118,6 @@ if z!.matches(".*?WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\).*") then
     z!=z!.replaceAll("WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCHAR"",$1$2")
 endif 
 
-
 rem replace get CURSOR PHY 
 if z!.matches(".*?WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\).*") then 
     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSORPHYSICAL"",$2$4")                                   
@@ -123,10 +128,14 @@ if z!.matches(".*?WIN\(GET\ *?CURSOR\ *?\).*") then
     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\(GET\ *?CURSOR\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSOR"",$2$4")                                   
 endif 
 
+REM make sure there is a , after print ATTR
+z! = z!.replaceAll("(PRINT\ *?'ATTR'\ *?\(.*?\))(?!\,)(.*?)(\;|$)","$1,$2$3") 
+
 rem replace close(0) 
 z! = z!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
 
-
+rem replace DEV 
+z! = z!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+\$0D\$$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
 
 rem can use opt as variable replace mode?= by opt= 
 z! = z!.replaceAll("MODE\?\=","OPT\=") 
@@ -140,15 +149,9 @@ z! = StringReplace.replaceWinGet(z!)
 rem replace WIN GET INFO 
 z! = StringReplace.replaceWinGetInfo(z!) 
 
-REM LET TMP$=WIN(GET CURSOR,PHYSICAL)
-REM devient
-REM CALL "DB%WIN","GETCURSOR PHYSICAL",tmp$
-REM 
-REM LET TMP$=WIN(GET CURSOR)
-REM devient
-REM CALL "DB%WIN","GETCURSOR",tmp$
-
-
+REM replace WINDOW DELETE 
+z! = z!.replaceAll("(?i)WINDOW\ *?DELETE\ *?\((ALL)\)","CALL ""DB%WIN"",""DELETE"",""$1""")
+z! = z!.replaceAll("WINDOW\ *?DELETE\ *?\((.*?)\)","CALL ""DB%WIN"",""DELETE"",$1")
 
 rem replace String DSK 
 if z!.matches(".*?\bSTRING\b.*?") then z! = z!.replaceAll("(STRING\ *?)(\w+.*?)\,(.*?)(\,0)","$1 TB.REPDSK\($3\)+$2") endif
@@ -163,8 +166,14 @@ z! =z!.replaceAll("\bSEP\b(?!\$)","SEP\$")
 rem remove err in START 
 z!=z!.replaceAll("(START\ *?\d{1,})(,ERR=\d{4,}\,)","$1,")  
 
+rem replace RELEASE another session killSEssion 
+z! = z!.replaceAll("(RELEASE\ *?)(\w.*?)(\;|$)","TB.killSession($2)$3") 
+
 rem raplce IFF47
 REM z!=StringReplace.replaceIFF47(z!)
+
+REM rem handle num with NTP and SIZ
+REM z! = z!.replaceAll("(LET.*?)(\,NTP\=0\,SIZ\=\.01\))","_precision=tcb(14);PRECISION 2;$1\);PRECISION _precision")
 
 z! = z!.replaceAll("REM\ """"","REM """)
 
@@ -323,6 +332,9 @@ class public StringReplace
         keyWordMap!.put("ERRMES","")
         keyWordMap!.put("POS","")
         keywordMap!.put("REM","")
+        keywordMap!.put("WHILE","")
+        keywordMap!.put("DIR","")
+        keywordMap!.put("XOR","")
 
         keyWordMap!.put("ABS","") ; keyWordMap!.put("ACS","") ; keyWordMap!.put("ASC","") ; keyWordMap!.put("ASN","") ; keyWordMap!.put("ATN","") ; keyWordMap!.put("ATQ","") 
         keyWordMap!.put("BSZ","") ; keyWordMap!.put("COS","") ; keyWordMap!.put("DEC","") ; keyWordMap!.put("DTN","") ; keyWordMap!.put("EPT","") ; keyWordMap!.put("ERR","")
@@ -491,7 +503,7 @@ REM         System.out.println("word:"+m!.toString())
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
-        p! = Pattern.compile("((?i)"+function!+"\ ARRAY\ ?(.*?))\[\((.*?)(\)\])")
+        p! = Pattern.compile("((?i)"+function!+"\ ARRAY\ ?(.*?))\[\((.*?)(\)\])(\;|$)")
         declare Matcher m!
         m! = p!.matcher(z!)
 
@@ -518,6 +530,7 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
                 if ok and tmp$(i,1)="," then posChar=i;break
             next i 
             newLine! = newLine!+beginLine!+" call ""DB%"+arrayType$+"ARRAY"","""+function!+""","+arrayname$+"[ALL],"+tmp$(1,i-1)+","+tmp$(i+1)
+            startLine=m!.end(4)
         wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
@@ -836,7 +849,6 @@ rem             if newLine!.isEmpty() then methodret z! endif
         declare Matcher m!
         m! = p!.matcher(z!)
 
-
         declare String beginLine!
         declare String endLine!  
         beginLine! = new String("") 
@@ -848,7 +860,7 @@ rem             if newLine!.isEmpty() then methodret z! endif
             endline! = z!.substring(m!.end(3))
             expr$=m!.group(2)
             if ! m!.group(3).trim().isEmpty() then 
-                expr$=expr$+","+m!.group(3)
+                expr$=m!.group(3)+","+expr$
             endif
             newLine! = beginLine!   +"CALL ""DB%WIN"",""GETINFO"","+expr$
         wend
@@ -970,5 +982,86 @@ REM /*
         methodret vec!
     methodend 
 
+    rem replace CVT by CVS 
+    method public static String replaceCVT(String z!) 
+        seterr replaceCVTError
+        declare String newLine! 
+        newLine! = new String("") 
+        declare Pattern p!     
+        p! = Pattern.compile("(TB\.CVT\()(.*?),(.*?)\)(?:\;|$)")
+
+        declare Matcher m!
+        m! = p!.matcher(z!)
+
+        declare String beginLine!
+        declare String endLine!  
+        beginLine! = new String("") 
+        endLine! = new String("") 
+        startLine=0
+
+        declare LinkedHashMap map! 
+        map! = new LinkedHashMap() 
+        map!.put("1","8") 
+        map!.put("2","128") 
+        map!.put("4","32") 
+        map!.put("8","4096")  
+        map!.put("16","4") 
+        map!.put("32","16") 
+        map!.put("128","2")                
+        declare String expr!
+        declare String cvtexpr!
+        while m!.find() 
+            beginLine! = z!.substring(startLine,m!.start(1))
+            endline! = z!.substring(m!.end(3))
+            expr!=""
+            expr!=m!.group(3)
+            ok=1 
+     
+            dim exprT![1]
+                        
+            if expr!.contains("+") then 
+                exprT![]=expr!.split("\+") 
+                exprT!=expr!.split("\+") 
+                lenExpr=Array.getLength(exprT!) 
+            else 
+                exprT![0]=expr!
+                lenExpr=1 
+            endif 
+            cvtexpr! = ""
+            
+            for i=0 to lenExpr-1
+                if map!.containsKey(exprT![i]) then 
+                    cvtexpr!=cvtexpr!+map!.get(exprT![i])+"+" 
+                else 
+                    ok=0 
+                    break
+                endif 
+            next i 
+            
+            if ok then 
+                cvtexpr!=cvtexpr!.substring(0,cvtexpr!.length()-1)
+                newLine! = newLine!+beginLine!+"CVS("+m!.group(2)+","+cvtexpr!+")"
+                startLine=m!.end(3)
+            else 
+                newLine! = newLine!+beginLine!+m!.group()     
+                startLine=m!.end()
+            endif 
+            
+        wend
+            if newLine!.isEmpty() then methodret z! endif 
+            newLine!=newLine!+endLine!
+            methodret newLine!
+    replaceCVTError: 
+    rem donoting         
+    methodret z!     
+    methodend 
+
 
     classend 
+    
+    
+
+
+    
+    
+    

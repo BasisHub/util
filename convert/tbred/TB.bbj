@@ -761,9 +761,11 @@ REM         info!.setKeyName(0,newKeyName$)
     
     
     method public static BBjString DSD(BBjString dev$) 
+	SETERR ERR_DSD
 	if #LIKE(dev$,"D?") then
         	dim fid$(86)
 		fid$(1,2)=dev$
+		fid$(6,1)=$00$
 		fid$(23)=STBL("!DSK_"+dev$)
 	else
         	dim fid$(72)
@@ -774,6 +776,8 @@ REM         info!.setKeyName(0,newKeyName$)
         	fid$(11,8)=stbl("!ID_TERM",err=*next)
 	endif
         methodret fid$
+	ERR_DSD:
+	methodret ""
     methodend 
     
     method public static BBjString XFD(BBjNumber channel,BBjNumber func)

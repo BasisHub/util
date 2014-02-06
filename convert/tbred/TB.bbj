@@ -250,16 +250,8 @@ REM         fi
         fi
 
         if valore>=2 then
-            if len(stringa$)=0 then
-                valore=valore-2
-            fi
-            let temp$=$$
-            for x=1 to len(stringa$)
-            if pos(stringa$(x,1)=$0920$)=0 then
-                let temp$=temp$+stringa$(x,1)
-            fi
-            next x
-            let stringa$=temp$
+            stringa$=cvs(stringa$,128) 
+            stringa$=cvs(stringa$,16)
             valore=valore-2
         fi
         

@@ -748,6 +748,7 @@ REM         info!.setKeyName(0,newKeyName$)
     rem */ 
     method public static boolean ALLBBj(BBjString input$,BBjString compareString$)
         seterr not_equal
+        if input$="" and compareString$>"" then methodret bbjapi().FALSE endif 
         if input$=FILL(len(input$),compareString$(1,1)) then methodret bbjapi().TRUE endif 
         not_equal: 
         methodret bbjapi().FALSE

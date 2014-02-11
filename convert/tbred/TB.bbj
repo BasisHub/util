@@ -604,6 +604,9 @@ REM         fi
     rem */
     method public static BBjNumber NUMDSK(BBjString filepath$)
         numdsk=-1
+	if len(filepath$)>0 AND filepath$(LEN(filepath$),1)<>"/" THEN
+	filepath$=filepath$+"/"
+	fi
         FOR dsk=0 to 9
             repdsk$=STBL("!DSK_D"+str(dsk),err=labnext)
             if pad(filepath$,len(repdsk$))=repdsk$ then numdsk=dsk; break

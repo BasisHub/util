@@ -4,6 +4,8 @@ use com.basis.api.admin.BBjAdminOpenFile
 use java.util.List
 use java.util.Iterator
 use java.net.InetAddress
+use java.util.GregorianCalendar
+use java.util.Calendar
 
 class public TB
 
@@ -37,12 +39,11 @@ class public TB
         seterr DTNJ_err
         prc=tcb(14)
         PRECISION 8
-REM         if num(dateval$)<=0 or len(dateval$)<>len(datemask$) then
-REM             goto DTNJ_err
-REM         fi
+
+        
         let dt$=$$, mk$=$$, datemask$=cvs(datemask$,4)
 
-                let x=pos("YYYY"=datemask$)
+        let x=pos("YYYY"=datemask$)
         if x<>0 then
             let dt$=dt$+dateval$(x,4), mk$=mk$+"%Yl", datemask$(x,4)="xxxx"
         fi
@@ -56,6 +57,18 @@ REM         fi
             fi
             let mk$=mk$+"%Yl", datemask$(x,2)="xx"
         fi
+
+        let x=pos("DDD"=datemask$)
+        if x<>0 then
+            mk$=mk$+"%Mz%Dz", datemask$(x,3)="xxx"
+            declare GregorianCalendar gc! 
+            gc! = new java.util.GregorianCalendar() 
+            gc!.set(Calendar.DAY_OF_YEAR,num(dateval$(x,3)))
+            gc!.set(Calendar.YEAR,num(dt$))
+            dt$=dt$+str(gc!.get(Calendar.MONTH)+1:"00")+str(gc!.get(Calendar.DAY_OF_MONTH))
+            goto return_dtn
+        fi    
+
 
         let x=pos("MM"=datemask$)
         if x<>0 then
@@ -71,14 +84,14 @@ REM         fi
             let dt$=dt$+"01", mk$=mk$+"%Dz"
         fi
 
-                datedec=0
+        datedec=0
 
-                let x=pos("HH"=datemask$)
+        let x=pos("HH"=datemask$)
         if x<>0 then
             let datedec=num(dateval$(x,2))/24
         fi
 
-                let x=pos("MI"=datemask$)
+        let x=pos("MI"=datemask$)
         if x<>0 then
             let datedec=datedec+num(dateval$(x,2))/24/60
         fi
@@ -87,8 +100,9 @@ REM         fi
         if x<>0 then
             let datedec=datedec+num(dateval$(x,2))/24/60/60
         fi
-
-                PRECISION prc
+        
+        return_dtn:
+        PRECISION prc
         dtn = jul(dt$,mk$)-1721423
         methodret dtn+datedec
 
@@ -153,6 +167,8 @@ REM         fi
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%sz"+datemask$(X+2)
         fi
+
+        escape
 
                 if datedec>0 
             ntd$=date(dateval+1721423,datedec:datemask$)

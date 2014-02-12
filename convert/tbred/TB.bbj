@@ -168,9 +168,7 @@ class public TB
             let datemask$=datemask$(1,x-1)+"%sz"+datemask$(X+2)
         fi
 
-        escape
-
-                if datedec>0 
+        if datedec>0 
             ntd$=date(dateval+1721423,datedec:datemask$)
         else  
             ntd$=date(dateval+1721423:datemask$)

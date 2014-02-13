@@ -106,23 +106,26 @@ class public TB
         dtn = jul(dt$,mk$)-1721423
         methodret dtn+datedec
 
-                DTNJ_err:
+        DTNJ_err:
         PRECISION prc
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
 
     methodend
 
+
+
     method public static BBjString NTD(BBjNumber dateval, BBjString datemask$)
-
-            seterr NTDJ_err
-
-                      if dateval=0 then 
+REM         seterr NTDJ_err
+        declare String datemask!
+        datemask!=datemask$
+        
+        
+        if dateval=0 then 
             dateval=JUL(0,0,0)-1721423
             datedec=TIM
         else    
-            datedec=dateval
-            dateval=round(dateval,0)
-            datedec=datedec-dateval
+            datedec=mod(dateval,1)
+            dateval=dateval-datedec
             datedec=datedec*24   
         endif
 
@@ -141,6 +144,30 @@ class public TB
             let datemask$=datemask$(1,x-1)+"%Mz"+datemask$(X+2)
         fi
 
+        uppercase=0
+
+        let x=pos("MON"=datemask$)
+        if x<>0 then
+             uppercase=1
+             datemask! = datemask$
+             let datemask$=datemask!.replaceAll("MON","%Ms")
+        fi
+
+        let x=pos("Dy"=datemask$)
+        if x<>0 then
+             datemask! = datemask$
+             let datemask$=datemask!.replaceAll("Dy","%Ms")
+        fi
+
+        let x=pos("DY"=datemask$)
+        if x<>0 then
+             uppercase=1
+             datemask! = datemask$
+             let datemask$=datemask!.replaceAll("DY","%Ms")
+        fi
+        
+        
+
 	let x=pos("DDD"=datemask$)
 	if x<>0 then
 		annee$=TB.NTD(dateval,"YYYY")	
@@ -153,26 +180,48 @@ class public TB
             let datemask$=datemask$(1,x-1)+"%Dz"+datemask$(X+2)
         fi
 
-                let x=pos("HH"=datemask$)
+        let x=pos("HH"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%Hz"+datemask$(X+2)
         fi
-
-                let x=pos("MI"=datemask$)
+        let x=pos("MI"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%mz"+datemask$(X+2)
         fi
 
-                let x=pos("SS"=datemask$)
+        let x=pos("SS"=datemask$)
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%sz"+datemask$(X+2)
         fi
 
+        let x=pos("SSSSSS"=datemask$)
+        if x<>0 then
+            datedec$=""
+            datedecval=datedec*60*60
+            datedecval=mod(datedecval,1)
+            datedec=round(datedec-(datedecval/10000),4)
+            
+            datemask!=datemask$
+            datemask$=datemask!.replaceAll(".SSSSSS","")
+            if datedec>0 then 
+                datedec$=str(datedecval:".000000")
+            endif 
+           
+        fi
+        
+        datemask! = datemask$ 
+        datemask$ = datemask!.replaceAll("Day","%Dl")
+        
         if datedec>0 
-            ntd$=date(dateval+1721423,datedec:datemask$)
+            ntd$=date(num(str(dateval+1721423)),datedec:datemask$)+datedec$
         else  
-            ntd$=date(dateval+1721423:datemask$)
+            ntd$=date(num(str(dateval+1721423)):datemask$)+datedec$
         endif 
+        
+        
+        
+        return_tnd:
+        if uppercase then ntd$=cvs(ntd$,4)
         methodret ntd$
         NTDJ_err:
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
@@ -799,7 +848,7 @@ REM         info!.setKeyName(0,newKeyName$)
 	methodret ""
     methodend 
 
-        method public static BBjString XFD(BBjNumber channel,BBjNumber func)
+    method public static BBjString XFD(BBjNumber channel,BBjNumber func)
 REM         XFD(canal_fichier,3) :  key definition data for MSORT and TISAM files
 REM         XFD(45,1)     = longueur clé principale
 REM         XFD(48,20)   = nom du tri principal

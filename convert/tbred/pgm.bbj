@@ -8,7 +8,7 @@ use java.util.regex.Matcher
 use java.util.LinkedHashMap
 use org.apache.commons.lang3.StringUtils
 use java.lang.reflect.Array
-
+use java.lang.Boolean
 
 
 class public PgmLine
@@ -859,10 +859,13 @@ REM /*
         exp$=exp! 
         startSearch=pos("("=exp$) 
         counter=0
+        declare Boolean inQuotes!
+        inQuotes!=bbjapi().FALSE 
         for i=startSearch to len(exp$)
             tmp$=exp$(i,1) 
-            if tmp$="(" then counter=counter+1
-            if tmp$=")" then counter=counter-1
+            if tmp$="""" then inQuotes! = !inQuotes! 
+            if tmp$="(" and !inQuotes! then counter=counter+1
+            if tmp$=")" and !inQuotes! then counter=counter-1
             if counter=0 then methodret i
         next i        
         methodret -1
@@ -1034,13 +1037,13 @@ REM         seterr substringCVTError
         startLine=0
         statement! = z!
 
-        startExp = statement!.indexOf("CVT") 
+        startExp = statement!.indexOf("CVT(") 
         endExp = #findMatchingBracket(statement!.substring(startExp)) 
         beginLine! = statement!.substring(0,startExp)
         endLine! = statement!.substring(startExp+endExp)
         cvtExp! = #replaceCVT(statement!.substring(startExp,startExp+endExp))
         statement! = beginLine!+cvtExp!+endline!       
-        if statement!.indexOf("CVT")>0 then statement!=#substringCVT(statement!) endif
+        if statement!.indexOf("CVT(")>0 then statement!=#substringCVT(statement!) endif
         statement! = statement!.replaceAll("CVX","TB.CVT")
         methodret statement!
         substringCVTError:
@@ -1056,7 +1059,7 @@ REM todo: if statement!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\
 
 
 z$="51223 LET ADR_EXPD$[I]=CVT("" ""+CVT(SITE_REC$[26],136)+"" ""+CVT(SITE_REC$[27],8),8)"
-z$="03512 IF STBL(""!ORACLE"",ERR=03513)=""O"" THEN LET Z$(LEN(CVT(Z$(1,Z),128)),1)=CVT(CHR(DEC(Z$(LEN(CVT(Z$(1,Z),128)),1))-1),16); GOTO 03514"
+z$="40376 IF PRM_CVT>0 THEN LET COLLER$=CVT(COLLER$,PRM_CVT)"
 
 l! = new PgmLine(z$) 
 

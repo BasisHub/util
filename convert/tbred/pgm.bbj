@@ -24,6 +24,7 @@ class public PgmLine
 
         if pgmLine!<>null() and pgmLine!.length()>0 then 
         #statements! = bbjapi().makeVector()
+        #pgmLine! = pgmLine!
         #pgmLine! = pgmLine!.replaceAll("REM\ *?""","REM """"")
         #splitLine()
         #pgmLine! = #pgmLine!.replaceAll("REM\ """"","REM """)
@@ -69,7 +70,10 @@ class public PgmLine
      statement! = ""
      pgmLine! = ""
 
-          for i=0 to #statements!.size()-1 
+REM      statement! = #pgmLine! 
+    REM statement! = statement!.replaceAll("REM\ *?""","""""")
+
+     for i=0 to #statements!.size()-1 
          statement! = #statements!.get(i).toString()
 
          rem if statement is line number goto ok 
@@ -78,10 +82,6 @@ class public PgmLine
          rem comments 
          rem don't convert lines that starts with comments 
          if statement!.trim().startsWith("REM ") then goto lineOk endif 
-         rem enable line 
-         if statement!.contains("<BBJ REM") then statement! = statement!.replaceAll("(\d{4,})\ *?REM","$1 ");goto lineOk endif 
-         rem disable line 
-         if statement!.contains(">BBJ REM") then statement! = statement!.replaceAll("(\d{4,})\ *?","$1 REM");goto lineOk endif 
 
          rem replace round brackets 
          if statement!.matches(".*?\(.*?\).*") then statement! = StringReplace.replaceRoundBrackets(statement!) endif 
@@ -102,7 +102,8 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
 
 
          rem raplce ALL """" 
-         statement! = statement!.replaceAll("(.*?)(?:\=|<|\>|\<\>)\ *?(\bALL\b)(.*)","TB.ALLBBj($1,$3)")
+         replaceAll:
+         statement! = statement!.replaceAll("(.*?)(?:\=|<|\>|\<\>)\ *?(\bALL\b)(.*?)(\=\d{1,}|$)","TB.ALLBBj($1,$3)$4")
 
 
          rem replace FINPUT by call 
@@ -245,14 +246,25 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
                 
 
         lineOk: 
-         pgmLine! = pgmLine!+statement!+" "
+        pgmLine! = pgmLine!+statement!+" "
      next i
      
      rem replace CVT         
-     if pgmline!.matches(".*CVT\(.*") then pgmline! = StringReplace.substringCVT(pgmline!) endif
+     if pgmLine!.matches(".*CVT\(.*") then pgmLine! = StringReplace.substringCVT(pgmLine!) endif
+     
      
      pgmLine!=StringReplace.replaceIFF47(pgmLine!)
      
+     replacePGN:
+     pgmLine! = pgmLine!.replaceAll("(\bPGN\b)(?!\$)","PGM(-2)")
+  
+    
+    rem enable line          
+    if pgmLine!.contains("REM """"<BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ *?REM\ """"<BBJ","$1 ") endif 
+    rem disable line
+     
+    if pgmLine!.contains("REM """">BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ ","$1 REM\ ") endif 
+
      
      methodret CPL(pgmLine!)
      convertErr: 
@@ -453,7 +465,7 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
         newLine! = new String("") 
         declare Pattern p!     
      
-        p! = Pattern.compile("(.*?)((?i)\ *?\bLIKE\ *?)(.*(\)|\""|\$))")       
+        p! = Pattern.compile("(.*?)(\ LIKE\ )(.*?)(?:\=\d{1,}|$)")       
         declare Matcher m!
         m! = p!.matcher(z!)
 
@@ -473,6 +485,7 @@ REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
 REM             System.out.println(z!)
+
             methodret newLine!
     replaceLikeError: 
     rem donoting         
@@ -822,22 +835,22 @@ REM /*
             
             st1! = m!.group(1)   
             var! = st1!.replaceAll(".*?(\w+\$).*","$1")                                 
-           
+            
             rem find expression in () 
             content!=st1!.substring(st1!.indexOf(var!)+var!.length()) 
             posMatch=#findMatchingBracket(content!) 
             if posMatch=-1 then methodret z! endif 
 
             content!=content!.substring(1,posMatch-1)
-
+            
             vec! = #splitExpression(content!) 
-
+            
             lenExp! = new String("")
                 for i=0 to vec!.size()-1 
                     lenExp! = lenExp!+vec!.getItem(i)+"+"
                 next i  
             lenExp! = lenExp!.substring(0,lenExp!.length()-1) 
-
+            
             myStatement! = " (LEN("+var!+")>="+lenExp!+" AND "+st1!+" ) "
             
             
@@ -856,6 +869,7 @@ REM /*
     methodend 
 
     method private static BBjNumber findMatchingBracket(String exp!) 
+        seterr findMatchingBracketError
         exp$=exp! 
         startSearch=pos("("=exp$) 
         counter=0
@@ -867,7 +881,8 @@ REM /*
             if tmp$="(" and !inQuotes! then counter=counter+1
             if tmp$=")" and !inQuotes! then counter=counter-1
             if counter=0 then methodret i
-        next i        
+        next i     
+        findMatchingBracketError:
         methodret -1
     methodend 
 
@@ -883,8 +898,8 @@ REM /*
             if tmp$="(" or tmp$="[" then ok=ok+1;continue endif 
             if tmp$=")" or tmp$="]" then 
                 ok=ok-1
-                if ok=0 then posChar=i;vec!.add(tmp!.substring(startExp,posChar));startExp=posChar+1 endif
-                continue 
+REM                 if ok=0 then posChar=i;vec!.add(tmp!.substring(startExp,posChar));startExp=posChar+1 endif
+REM                 continue 
             endif
             if tmp$="," and ok=0 then
              posChar=i
@@ -898,7 +913,7 @@ REM /*
 
     rem replace CVT by CVS 
     method public static String replaceCVT(String z!) 
-REM         seterr replaceCVTError
+        seterr replaceCVTError
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
@@ -919,13 +934,13 @@ REM         seterr replaceCVTError
 
         declare LinkedHashMap map! 
         map! = new LinkedHashMap() 
-        map!.put("1","8") 
-        map!.put("2","128") 
-        map!.put("4","32") 
-        map!.put("8","4096")  
-        map!.put("16","4") 
-        map!.put("32","16") 
-        map!.put("128","2")                
+        map!.put("8","1") 
+        map!.put("128","2") 
+        map!.put("32","4") 
+        map!.put("4096","8")  
+        map!.put("4","16") 
+        map!.put("16","32") 
+        map!.put("2","128")                
         declare String expr!
         declare String var!
         declare String cvtexpr!
@@ -1025,7 +1040,7 @@ REM         seterr replaceCVTError
 
 
     method public static String substringCVT(String z!) 
-REM         seterr substringCVTError
+        seterr substringCVTError
         declare String newLine! 
         newLine! = new String("") 
 
@@ -1036,21 +1051,22 @@ REM         seterr substringCVTError
         endLine! = new String("") 
         startLine=0
         statement! = z!
-
+       
         startExp = statement!.indexOf("CVT(") 
         endExp = #findMatchingBracket(statement!.substring(startExp)) 
         beginLine! = statement!.substring(0,startExp)
         endLine! = statement!.substring(startExp+endExp)
+        
         cvtExp! = #replaceCVT(statement!.substring(startExp,startExp+endExp))
         statement! = beginLine!+cvtExp!+endline!       
         if statement!.indexOf("CVT(")>0 then statement!=#substringCVT(statement!) endif
-        statement! = statement!.replaceAll("CVX","TB.CVT")
+        statement! = statement!.replaceAll("CVX\(","TB.CVT(")
         methodret statement!
         substringCVTError:
             throw "substringCVTError",200
     methodend 
-
-
+    
+     
     classend 
 
 
@@ -1058,8 +1074,9 @@ REM todo: if statement!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\
 
 
 
-z$="51223 LET ADR_EXPD$[I]=CVT("" ""+CVT(SITE_REC$[26],136)+"" ""+CVT(SITE_REC$[27],8),8)"
-z$="40376 IF PRM_CVT>0 THEN LET COLLER$=CVT(COLLER$,PRM_CVT)"
+z$="51223 LET ADR_EXPD$[I]=CVT("" ""+CVT(SITE_REC$[26],4)+"" ""+CVT(SITE_REC$[27],8),8)"
+z$="0642 LET DSQ$=TB.FID(C_DSQ) ; REM "">BBJ REM  "
+rem z$="30116 REM ""<BBJ LET DISK$=STBL(""!DSK_""+DISK$,ERR=30199),DISK$=DISK$(1,LEN(DISK$)-1)  "
 
 l! = new PgmLine(z$) 
 

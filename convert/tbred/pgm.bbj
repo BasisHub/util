@@ -253,7 +253,11 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
      if pgmLine!.matches(".*CVT\(.*") then pgmLine! = StringReplace.substringCVT(pgmLine!) endif
      
      
-     pgmLine!=StringReplace.replaceIFF47(pgmLine!)
+ pgmLine!=StringReplace.replaceIFF47(pgmLine!)
+     rem replace IFF47
+REM      escape
+REM      pgmLine! = pgmLine!.replaceAll("(IF|OR|AND)\ (\w.*?\$.*?)(OR|AND|THEN)","$1 FNIF\$(""$2"")$3")
+     
      
      replacePGN:
      pgmLine! = pgmLine!.replaceAll("(\bPGN\b)(?!\$)","PGM(-2)")
@@ -823,16 +827,17 @@ REM /*
         startLine=0
         declare String statement!
         statement! = "" 
+        escape
         while m!.find() 
         
             beginLine! = z!.substring(startLine,m!.start(1))
             endline! = z!.substring(m!.end(1))
             
-            if beginLine!.contains("TB.LIKE(") then
-                myStatement!=m!.group(1)
-                goto proceed_next
-            endif 
-            
+REM             if beginLine!.contains("TB.LIKE(") then
+REM                 myStatement!=m!.group(1)
+REM                 goto proceed_next
+REM             endif 
+            escape
             st1! = m!.group(1)   
             var! = st1!.replaceAll(".*?(\w+\$).*","$1")                                 
             
@@ -850,7 +855,7 @@ REM /*
                     lenExp! = lenExp!+vec!.getItem(i)+"+"
                 next i  
             lenExp! = lenExp!.substring(0,lenExp!.length()-1) 
-            
+            escape
             myStatement! = " (LEN("+var!+")>="+lenExp!+" AND "+st1!+" ) "
             
             
@@ -1077,7 +1082,7 @@ REM todo: if statement!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\
 z$="51223 LET ADR_EXPD$[I]=CVT("" ""+CVT(SITE_REC$[26],4)+"" ""+CVT(SITE_REC$[27],8),8)"
 z$="0642 LET DSQ$=TB.FID(C_DSQ) ; REM "">BBJ REM  "
 rem z$="30116 REM ""<BBJ LET DISK$=STBL(""!DSK_""+DISK$,ERR=30199),DISK$=DISK$(1,LEN(DISK$)-1)  "
-
+z$="IF CVT(test$(1,5),1)=""test "" THEN print test$ endif"
 l! = new PgmLine(z$) 
 
 ?l!.getBBjLine()

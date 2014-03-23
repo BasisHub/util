@@ -991,10 +991,9 @@ REM         XFD(48,20)   = nom du tri principal
                 fst$(29,4)=$00000000$
                 
             endif 
-            
-            if pos("Size:"=tmpFileInfo$,1,1)>0 then 
+            if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
                 fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
-                fst$(33,4)=bin(num(fileSize$))
+                fst$(33,4)=bin(num(cvs(fileSize$,16)))
             endif 
             
             if pos("Change:"=tmpFileInfo$,1,1)>0 then 
@@ -1002,7 +1001,7 @@ REM         XFD(48,20)   = nom du tri principal
                 fst$(37,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
             endif 
             
-            if pos("Access:"=tmpFileInfo$,1,1)>0 then 
+            if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
                 changed$=tmpFileInfo$(9,20) 
                 fst$(43,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
             endif 

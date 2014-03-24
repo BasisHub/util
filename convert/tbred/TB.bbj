@@ -1015,5 +1015,19 @@ REM         XFD(48,20)   = nom du tri principal
         methodret ""
       methodend 
 
+      method public BBjString DSD(BBjString in$) 
+        dim dsd$(54) 
+        
+        dsd$(1,2)=hta(fid(0))
+        
+        
+        
+        rem dsd 7,47 - DOS 
+        methodret dsd$
+        DSDError:
+        System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
+        methodret ""
+      methodend 
+
 
     classend

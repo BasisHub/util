@@ -158,14 +158,14 @@ REM         seterr NTDJ_err
         let x=pos("Dy"=datemask$)
         if x<>0 then
              datemask! = datemask$
-             let datemask$=datemask!.replaceAll("Dy","%Ms")
+             let datemask$=datemask!.replaceAll("Dy","%Ds")
         fi
 
         let x=pos("DY"=datemask$)
         if x<>0 then
              uppercase=1
              datemask! = datemask$
-             let datemask$=datemask!.replaceAll("DY","%Ms")
+             let datemask$=datemask!.replaceAll("DY","%Ds")
         fi
         
         
@@ -1016,12 +1016,13 @@ REM         XFD(48,20)   = nom du tri principal
       methodend 
 
       method public BBjString DSD(BBjString in$) 
+        seterr DSDError
         dim dsd$(54) 
 
         config$=BBjApi().getConfig().getConfigFileName()
         ch=unt 
         open(ch)"|/usr/bin/cat "+config$+" | grep "+in$
-        read(ch)dAlias$ 
+        read(ch,end=*next)dAlias$ 
         close(ch)
         
         dsd$(1,2)=in$(1,2);rem hta(fid(0))

@@ -954,8 +954,13 @@ REM         XFD(48,20)   = nom du tri principal
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
             
+            if pos("FILE:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
+                filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-1-(pos("`"=tmpFileInfo$,1,2)+1)) 
+                continue
+            endif 
+            
             rem device infomation 
-            if tmpFileInfo$(1,6)="Device" then 
+           if tmpFileInfo$(1,6)="Device" then 
              device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
              fst$(11,4)=ath(fill(8-len(device$),"0")+device$)
              
@@ -965,6 +970,7 @@ REM         XFD(48,20)   = nom du tri principal
              rem TODO: 19-20 File protection bits             
              numLinks$=tmpFileInfo$(pos("Links: "=tmpFileInfo$)+len("Links: "))
              fst$(23,2)=bin(num(numLinks$))
+             continue
             endif 
             
             if pos("Uid:"=tmpFileInfo$)>0 then 
@@ -989,7 +995,7 @@ REM         XFD(48,20)   = nom du tri principal
                 
                 rem todo: Device ID. This entry is valid only for Block and character special devices
                 fst$(29,4)=$00000000$
-                
+                continue 
             endif 
             if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
                 fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
@@ -999,17 +1005,19 @@ REM         XFD(48,20)   = nom du tri principal
             if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,20) 
                 fst$(37,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                continue 
             endif 
             
             if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
                 changed$=tmpFileInfo$(9,20) 
                 fst$(43,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                continue 
             endif 
             
         wend 
         close(ch) 
         
-        methodret fst$
+        methodret fst$+filePath$
         FSTError:
         System.out.println("Error FSTs"+str(err)+" "+str(tcb(5)))
         methodret ""

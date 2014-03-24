@@ -1017,9 +1017,26 @@ REM         XFD(48,20)   = nom du tri principal
 
       method public BBjString DSD(BBjString in$) 
         dim dsd$(54) 
+
+        config$=BBjApi().getConfig().getConfigFileName()
+        ch=unt 
+        open(ch)"|/usr/bin/cat "+config$+" | grep "+in$
+        read(ch)dAlias$ 
+        close(ch)
         
-        dsd$(1,2)=hta(fid(0))
+        dsd$(1,2)=in$(1,2);rem hta(fid(0))
         
+        switch 1 
+        case in$(1,1)="T"; dsd$(4,1)="T";break 
+        case in$(1,1)="P" 
+            dsd$(4,1)="P"
+            dsd$(5,1)=$09$
+            if pos("SLAVE"=dAlias$,1,1)>0 then dsd$(6,1)=$02$ endif 
+            break
+        case default;break 
+        swend
+        
+
         
         
         rem dsd 7,47 - DOS 

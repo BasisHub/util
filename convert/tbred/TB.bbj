@@ -1033,7 +1033,7 @@ REM         XFD(48,20)   = nom du tri principal
         case in$(1,1)="P" 
             dsd$(4,1)="P"
             dsd$(5,1)=$09$
-            if pos("SLAVE"=dAlias$,1,1)>0 then dsd$(6,1)=$02$ endif 
+            if pos("SLAVE"=cvs(dAlias$,4),1,1)>0 OR pos("SLON"=cvs(dAlias$,4),1,1)>0 then dsd$(6,1)=$02$ endif 
             break
         case default;break 
         swend

@@ -955,7 +955,7 @@ REM         XFD(48,20)   = nom du tri principal
             read(ch,end=*break)tmpFileInfo$ 
             
             if pos("FILE:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
-                filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-1-(pos("`"=tmpFileInfo$,1,2)+1)) 
+                filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-(pos("`"=tmpFileInfo$,1,2)+1))
                 continue
             endif 
             

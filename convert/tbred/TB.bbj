@@ -939,6 +939,7 @@ REM         XFD(48,20)   = nom du tri principal
           rem 5-6 file type 
           bbjFileType$=mfid$(1,1) 
           fst$(5,1)=$00$
+          
           switch 1
           case bbjfiletype$=$05$;fst$(6,1)=$0A$;break
           case bbjfiletype$>=$20$;fst$(6,1)=$06$;break
@@ -1037,13 +1038,25 @@ REM         XFD(48,20)   = nom du tri principal
         dsd$(1,3)=in$;rem hta(fid(0))
         
         switch 1 
-        case in$(1,1)="T"; dsd$(4,1)="T";break 
+        case in$(1,1)="X"
+            dsd$(4,1)="T"
+            dsd$(5,1)=$00$
+            dsd$(6,1)=$00$
+            dsd$(11,8) = STBL("!ID_TERM")
+            break 
         case in$(1,1)="P" 
             dsd$(4,1)="P"
             dsd$(5,1)=$09$
-            if pos("SLAVE"=cvs(dAlias$,4),1,1)>0 OR pos("SLON"=cvs(dAlias$,4),1,1)>0 then dsd$(6,1)=$02$ endif 
+            if pos("lp -d"=dAlias$,1,1)>0 then dsd$(6,1)=$01$ endif 
+            if pos("/dev/tty"=dAlias$,1,1)>0 then dsd$(6,1)=$02$ endif 
             break
-        case default;break 
+        case in$(1,1)="D"
+            dsd$(23,64) = STBL("!DSK_"+DISK$)    
+            break
+        case default
+            dsd$(5,1)=$00$
+            dsd$(6,1)=$00$
+            break 
         swend
         
 

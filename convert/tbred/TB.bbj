@@ -105,7 +105,6 @@ class public TB
         return_dtn:
         PRECISION prc
         dtn = jul(dt$,mk$)-1721423
-        dtn$=str(dtn)+str(datedec*1000)
         methodret num(dtn$);rem dtn+datedec
 
         DTNJ_err:

@@ -1029,7 +1029,7 @@ REM         XFD(48,20)   = nom du tri principal
 
         config$=BBjApi().getConfig().getConfigFileName()
         ch=unt 
-        open(ch)"|/usr/bin/cat "+config$+" | grep "+in$
+        open(ch)"|/bin/cat "+config$+" | grep "+in$
         read(ch,end=*next)dAlias$
         if pos(" "+in$+" "=dAlias$,1,1)>0 then break;else dAlias$="" endif 
         close(ch)

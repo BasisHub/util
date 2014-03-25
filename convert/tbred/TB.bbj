@@ -1051,7 +1051,7 @@ REM         XFD(48,20)   = nom du tri principal
             if pos("/dev/tty"=dAlias$,1,1)>0 then dsd$(6,1)=$02$ endif 
             break
         case in$(1,1)="D"
-            dsd$(23,64) = STBL("!DSK_"+DISK$)    
+            dsd$(23,64) = STBL("!DSK_"+cvs(in$,3))    
             break
         case default
             dsd$(5,1)=$00$

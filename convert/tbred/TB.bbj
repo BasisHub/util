@@ -41,7 +41,7 @@ class public TB
         prc=tcb(14)
         PRECISION 8
 
-        
+
         let dt$=$$, mk$=$$, datemask$=cvs(datemask$,4)
 
         let x=pos("YYYY"=datemask$)
@@ -101,8 +101,8 @@ class public TB
         if x<>0 then
             let datedec=datedec+num(dateval$(x,2))/24/60/60
         fi
-        
-        return_dtn:
+
+                return_dtn:
         PRECISION prc
         dtn = jul(dt$,mk$)-1721423
         methodret num(dtn$);rem dtn+datedec
@@ -119,8 +119,8 @@ class public TB
 REM         seterr NTDJ_err
         declare String datemask!
         datemask!=datemask$
-        
-        
+
+
         if dateval=0 then 
             dateval=JUL(0,0,0)-1721423
             datedec=TIM
@@ -166,8 +166,8 @@ REM         seterr NTDJ_err
              datemask! = datemask$
              let datemask$=datemask!.replaceAll("DY","%Ds")
         fi
-        
-        
+
+
 
 	let x=pos("DDD"=datemask$)
 	if x<>0 then
@@ -201,27 +201,27 @@ REM         seterr NTDJ_err
             datedecval=datedec*60*60
             datedecval=mod(datedecval,1)
             datedec=round(datedec-(datedecval/10000),4)
-            
-            datemask!=datemask$
+
+                        datemask!=datemask$
             datemask$=datemask!.replaceAll(".SSSSSS","")
             if datedec>0 then 
                 datedec$=str(datedecval:".000000")
             endif 
-           
-        fi
-        
-        datemask! = datemask$ 
+
+                   fi
+
+                datemask! = datemask$ 
         datemask$ = datemask!.replaceAll("Day","%Dl")
-        
-        if datedec>0 
+
+                if datedec>0 
             ntd$=date(num(str(dateval+1721423)),datedec:datemask$)+datedec$
         else  
             ntd$=date(num(str(dateval+1721423)):datemask$)+datedec$
         endif 
-        
-        
-        
-        return_tnd:
+
+
+
+                return_tnd:
         if uppercase then ntd$=cvs(ntd$,4)
         methodret ntd$
         NTDJ_err:
@@ -380,10 +380,10 @@ REM         seterr NTDJ_err
             let x=x+1
         wend
        else 
-            
-       endif  
-      
-        
+
+                   endif  
+
+
         goto TSKJ_exit
 
         TSKJ_exit:
@@ -856,15 +856,121 @@ REM         info!.setKeyName(0,newKeyName$)
     methodend 
 
     method public static BBjString XFD(BBjNumber channel,BBjNumber func)
-REM         XFD(canal_fichier,3) :  key definition data for MSORT and TISAM files
-REM         XFD(45,1)     = longueur clé principale
-REM         XFD(48,20)   = nom du tri principal
+REM     XFD(canal_fichier,3) :  key definition data for MSORT and TISAM files
+REM     XFD(45,1)     = longueur clé principale
+REM     XFD(48,20)   = nom du tri principal
         dim xfd$(100) 
         declare BBjFileInfo info! 
         info! = bbjapi().getFileSystem().getFileInfo(channel)
-        keyLen = #getKeyLen(info!.getKeyInfo(0).getKeySegments())        
-        xfd$(45,1)=chr(keyLen)
-        xfd$(48,20)=info!.getKeyName(0,err=*next)
+
+        declare LinuxFileInfo lFileInfo!
+        lFileInfo! = new LinuxFileInfo(file$) 
+
+
+        switch func 
+        case 0 
+            xfd$(3,8)=bin(lFileInfo!.getInode())
+            xfd$(38,4)=bin(lFileInfo!.getFileSize())
+            xfd$(54,6)=bin(lFileInfo!.getLastChange())
+            xfd$(60,6)=bin(lFileInfo!.getLastAccess())
+            rem todo: handle large files
+            break 
+        case 1 
+            break 
+        case 2 
+            break 
+        case 3 
+          dim xfd$(44)
+          xfd$=fill(44,$00$)
+          bbjFileType$=bin(info!.getFileType())     
+          switch 1
+          case bbjfiletype$=$84$;xfd$(2,1)=$04$;break
+          case bbjfiletype$>=$20$;xfd$(2,1)=$06$;break
+          rem $00$ to $04$ default 
+          case default; xfd$(2,1)=bbjFileType$;break
+          swend 
+
+          declare BBjVector keyVector! 
+          keyVector! = info!.getKeyInfo(err=*next)           
+          numKeys=0
+          numKeys=keyVector!.size(err=*next) 
+          xfd$(3,1)=bin(numKeys)
+
+          currentKey=0
+          currentKey=info!.getCurrentKeyNumber(err=*next)
+          xfd$(4,1)=bin(currentKey)
+
+                    xfd$(5,1)="N"
+
+                    xfd$(6,1)="N"
+          if bbjFileType$=$00$ then xfd$(6,1)="Y" endif 
+
+                    xfd$(7,1)="Y"
+
+          rem todo: 13-14 Index node size for MSORT and TISAM files; unsigned binary
+          rem 15-16 not used The minimum record size (COBOL files only)
+          rem todo: 17 Duplicate number width for MSORT and TISAM files
+          rem todo: 18-19 Current commit counter ?
+          rem todo: 20-21 Channel's commit count, non-zero if overridden by the CTC=option, otherwise zero
+          rem todo: 22-45 unused 
+
+          declare BBjVector keys! 
+          keys! = info!.getKeyInfo() 
+          
+          for numKey=0 to keys!.size()-1  
+          
+            dim keyInfo$(39) 
+            keyInfo$=fill(39,$00$)
+            declare BBjKeyInfo keyInfo!          
+    
+            keyInfo! = info!.getKeyInfo(numKey)
+            keyLen = #getKeyLen(keyInfo!.getKeySegments())        
+  
+            keySegments! = keyInfo!.getKeySegments()
+            numSegments=keySegments!.size()   
+            
+  
+            rem todo: check 45,1
+            keyInfo$(1,1)=bin(keyLen)
+            keyInfo$(2,1)=bin(numSegments)
+            keyInfo$(3,1)=$00$ 
+            keyName$=str(numKey)
+            if info!.getKeyName(0,err=*next)<>null() then keyName$=info!.getKeyName(numKey) endif 
+            keyInfo$(4,20)=keyName$+fill(20-len(keyName$),$00$)
+            rem todo: byte 24 = Key may be modified
+            keyInfo$(24,1)="N"
+            if keyInfo!.isUnique() then keyInfo$(25,1)="Y" else keyInfo$(25,1)="N" endif 
+            rem bytes 27,5 = Unused
+            rem todo: byte 32 = Field number (0 = no field number specified), unsigned binary get fieldnumber
+            rem 33,6 not used
+            
+                   
+
+            for numSegement=0 to numSegments-1            
+              keySegment! = keySegments!.get(numSegement)
+              dim segmentInfo$(8)
+              segmentInfo$=fill(8,$00$)
+              segmentInfo$(1,1)=bin(keySegment!.getField())
+              segmentInfo$(2,2)=ath(str(keySegment!.getOffset()+1:"0000"))
+              segmentInfo$(4,1)=bin(keySegment!.getLength())    
+              if keySegment!.isDescending() then segmentInfo$(5,1)="D" else segmentInfo$(5,1)="A" endif 
+              
+              keyInfo$=keyInfo$+segmentInfo$
+            next numSegement
+            xfd$=xfd$+keyInfo$
+          next numKey
+                      break 
+        case 5 
+            break 
+        case 6 
+            break 
+        case 10 
+            break 
+        swend 
+
+
+
+
         methodret xfd$
     methodend 
 
@@ -929,8 +1035,8 @@ REM         XFD(48,20)   = nom du tri principal
         open(ch)file$ 
         mfid$=fid(ch)
         close(ch)
-        
-        dim fst$(118)
+
+                dim fst$(118)
         if option=1 then 
           rem 1-2
           fst$(1)=$0020$
@@ -938,8 +1044,7 @@ REM         XFD(48,20)   = nom du tri principal
           fst$(3,2)=$0000$
           rem 5-6 file type 
           bbjFileType$=mfid$(1,1) 
-          fst$(5,1)=$00$
-          
+          fst$(5,1)=$00$      
           switch 1
           case bbjfiletype$=$05$;fst$(6,1)=$0A$;break
           case bbjfiletype$>=$20$;fst$(6,1)=$06$;break
@@ -947,33 +1052,33 @@ REM         XFD(48,20)   = nom du tri principal
           case default; fst$(6,1)=bbjFileType$
           swend 
         endif 
-        
-        rem *nix OS 
+
+                rem *nix OS 
         ch=unt 
         open(ch)"| /usr/bin/stat "+file$ 
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
-            
-            if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
+
+                        if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
                 filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-(pos("`"=tmpFileInfo$,1,2)+1))
                 continue
             endif 
-            
-            rem device infomation 
+
+                        rem device infomation 
            if tmpFileInfo$(1,6)="Device" then 
              device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
              fst$(11,4)=ath(fill(8-len(device$),"0")+device$)
-             
-             inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
+
+                          inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
              fst$(15,4)=bin(num(inode$))
-             
-             rem TODO: 19-20 File protection bits             
+
+                          rem TODO: 19-20 File protection bits             
              numLinks$=tmpFileInfo$(pos("Links: "=tmpFileInfo$)+len("Links: "))
              fst$(23,2)=bin(num(numLinks$))
              continue
             endif 
-            
-            if pos("Uid:"=tmpFileInfo$)>0 then 
+
+                        if pos("Uid:"=tmpFileInfo$)>0 then 
                 fileType$=tmpFileInfo$(pos("/"=tmpFileInfo$,1,1)+1,1)
                 switch 1 
                 case fileType$="d";fst$(21,2)=$000A$;break 
@@ -986,14 +1091,14 @@ REM         XFD(48,20)   = nom du tri principal
                 case fileType$="l";fst$(21,2)=$0045$;break   
                 case default;fst$(21,2)=$004F$;break 
                 swend
-                
-                uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
+
+                                uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
                 fst$(25,2)=bin(num(uid$)) 
-                
-                gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
+
+                                gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
                 fst$(27,2)=bin(num(gid$)) 
-                
-                rem todo: Device ID. This entry is valid only for Block and character special devices
+
+                                rem todo: Device ID. This entry is valid only for Block and character special devices
                 fst$(29,4)=$00000000$
                 continue 
             endif 
@@ -1001,23 +1106,23 @@ REM         XFD(48,20)   = nom du tri principal
                 fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
                 fst$(33,4)=bin(num(cvs(fileSize$,16)))
             endif 
-            
-            if pos("Change:"=tmpFileInfo$,1,1)>0 then 
+
+                        if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,20) 
                 fst$(37,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
                 continue 
             endif 
-            
-            if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
+
+                        if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
                 changed$=tmpFileInfo$(9,20) 
                 fst$(43,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
                 continue 
             endif 
-            
-        wend 
+
+                    wend 
         close(ch) 
-        
-        methodret fst$+filePath$
+
+                methodret fst$+filePath$
         FSTError:
         System.out.println("Error FSTs"+str(err)+" "+str(tcb(5)))
         methodret ""
@@ -1033,11 +1138,11 @@ REM         XFD(48,20)   = nom du tri principal
         read(ch,end=*next)dAlias$
         if pos(" "+in$+" "=dAlias$,1,1)=0 then dAlias$="" endif 
         close(ch)
-        
-        
+
+
         dsd$(1,3)=in$;rem hta(fid(0))
-        
-        switch 1 
+
+                switch 1 
         case in$(1,1)="T"
             dsd$(4,1)="T"
             dsd$(5,1)=$00$
@@ -1058,10 +1163,10 @@ REM         XFD(48,20)   = nom du tri principal
             dsd$(6,1)=$00$
             break 
         swend
-        
 
-        
-        
+
+
+
         rem dsd 7,47 - DOS 
         methodret dsd$
         DSDError:
@@ -1071,3 +1176,121 @@ REM         XFD(48,20)   = nom du tri principal
 
 
     classend
+
+        class public LinuxFileInfo 
+
+                field private BBjString filePath$
+        field private BBjString device$ 
+        field private BBjNumber inode
+        field private BBjNumber numLinks
+        field private BBjString fileType$
+        field private BBjNumber uid 
+        field private BBjNumber gid 
+        field private BBjNumber fileSize 
+        field private BBjNumber lastChange
+        field private BBjNumber lastAccess
+
+                method private LinuxFileInfo() 
+        methodend 
+
+                method public LinuxFileInfo(BBjString file$)
+        seterr LinuxFileInfoError
+        rem *nix OS 
+        ch=unt 
+        open(ch)"| /usr/bin/stat "+file$ 
+        while 1 
+            read(ch,end=*break)tmpFileInfo$ 
+
+                        if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
+                #filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-(pos("`"=tmpFileInfo$,1,2)+1))
+                continue
+            endif 
+
+                        rem device infomation 
+           if tmpFileInfo$(1,6)="Device" then 
+             device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
+             #device$=fill(8-len(device$),"0")+device$
+
+                          inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
+             #inode=num(inode$)
+
+                          rem TODO: 19-20 File protection bits             
+             numLinks$=tmpFileInfo$(pos("Links: "=tmpFileInfo$)+len("Links: "))
+             #numLinks=num(numLinks$)
+             continue
+            endif 
+
+                        if pos("Uid:"=tmpFileInfo$)>0 then 
+                #fileType$=tmpFileInfo$(pos("/"=tmpFileInfo$,1,1)+1,1)
+
+                                uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
+                #uid=num(uid$)
+
+                                gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
+                #gid=num(gid$)
+
+                                rem todo: Device ID. This entry is valid only for Block and character special devices
+                continue 
+            endif 
+            if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
+                fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
+                #fileSize=num(cvs(fileSize$,16))
+            endif 
+
+                        if pos("Change:"=tmpFileInfo$,1,1)>0 then 
+                changed$=tmpFileInfo$(9,20) 
+                #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                continue 
+            endif 
+
+                        if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
+                changed$=tmpFileInfo$(9,20) 
+                #lastAccess=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
+                continue 
+            endif 
+            methodret 
+            LinuxFileInfoError:
+            System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
+        methodend 
+
+                method public BBjString getFilePath() 
+            methodret #filePath$
+        methodend 
+
+                method public BBjString getDevice() 
+            methodret #device$ 
+        methodend 
+
+                method public BBjNumber getInode() 
+            methodret #inode
+        methodend 
+
+                method public BBjNumber getNumLinks() 
+            methodret #numLinks
+        methodend 
+
+                method public BBjString getFileType() 
+            methodret #fileType$
+        methodend 
+
+                method public BBjNumber getUID() 
+            methodret #uid
+        methodend 
+
+                 method public BBjNumber getGID() 
+            methodret #gid
+        methodend 
+
+                 method public BBjNumber getFileSize() 
+            methodend #fileSize
+        methodend 
+
+                 method public BBjNumber getLastChange() 
+            methodret #lastChange
+        methodend 
+
+                method public BBjNumber getLastAccess() 
+            methodret #lastAccess
+        methodend 
+
+         classend 

@@ -106,7 +106,7 @@ class public TB
                 return_dtn:
         PRECISION prc
         dtn = jul(dt$,mk$)-1721423
-        methodret num(dtn$);rem dtn+datedec
+        methodret dtn+datedec
 
         DTNJ_err:
         PRECISION prc
@@ -1244,7 +1244,7 @@ REM     XFD(48,20)   = nom du tri principal
 
             if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,20) 
-                #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
                 continue 
             endif 
 

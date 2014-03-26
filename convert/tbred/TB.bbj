@@ -872,7 +872,7 @@ REM         info!.setKeyName(0,newKeyName$)
         case 0 
             dim xfd$(85)
             xfd$=fill(85,$00$)
-            
+            xfd$(1,1)=$01$
             xfd$(3,8)=ath(str(lFileInfo!.getInode():"0000000000000000"))
             xfd$(38,4)=ath(str(lFileInfo!.getFileSize():"00000000"))
             xfd$(54,6)=ath(str(lFileInfo!.getLastChanged():"000000000000"))

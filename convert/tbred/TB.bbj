@@ -8,6 +8,7 @@ use java.util.GregorianCalendar
 use java.util.Calendar
 use java.io.File
 
+
 class public TB
 
 
@@ -882,6 +883,9 @@ REM     XFD(48,20)   = nom du tri principal
         case 3 
           dim xfd$(44)
           xfd$=fill(44,$00$)
+          
+          xfd$(1,1)=$01$
+          
           bbjFileType$=bin(info!.getFileType())     
           switch 1
           case bbjfiletype$=$84$;xfd$(2,1)=$04$;break
@@ -938,8 +942,9 @@ REM     XFD(48,20)   = nom du tri principal
             if info!.getKeyName(0,err=*next)<>null() then keyName$=info!.getKeyName(numKey) endif 
             keyInfo$(4,20)=keyName$+fill(20-len(keyName$),$00$)
             rem todo: byte 24 = Key may be modified
-            keyInfo$(24,1)="N"
-            if keyInfo!.isUnique() then keyInfo$(25,1)="Y" else keyInfo$(25,1)="N" endif 
+            keyInfo$(24,1)="Y"
+            keyInfo$(25,1)="N"
+            rem if keyInfo!.isUnique() then keyInfo$(25,1)="Y" else keyInfo$(25,1)="N" endif 
             rem bytes 27,5 = Unused
             rem todo: byte 32 = Field number (0 = no field number specified), unsigned binary get fieldnumber
             rem 33,6 not used
@@ -1193,7 +1198,7 @@ REM     XFD(48,20)   = nom du tri principal
                 method private LinuxFileInfo() 
         methodend 
 
-                method public LinuxFileInfo(BBjString file$)
+        method public LinuxFileInfo(BBjString file$)
         seterr LinuxFileInfoError
         rem *nix OS 
         ch=unt 
@@ -1201,7 +1206,7 @@ REM     XFD(48,20)   = nom du tri principal
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
 
-                        if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
+            if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
                 #filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-(pos("`"=tmpFileInfo$,1,2)+1))
                 continue
             endif 
@@ -1237,7 +1242,7 @@ REM     XFD(48,20)   = nom du tri principal
                 #fileSize=num(cvs(fileSize$,16))
             endif 
 
-                        if pos("Change:"=tmpFileInfo$,1,1)>0 then 
+            if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,20) 
                 #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
                 continue 

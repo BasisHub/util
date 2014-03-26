@@ -857,23 +857,27 @@ REM         info!.setKeyName(0,newKeyName$)
     methodend 
 
     method public static BBjString XFD(BBjNumber channel,BBjNumber func)
-REM     XFD(canal_fichier,3) :  key definition data for MSORT and TISAM files
-REM     XFD(45,1)     = longueur clé principale
-REM     XFD(48,20)   = nom du tri principal
         dim xfd$(100) 
         declare BBjFileInfo info! 
         info! = bbjapi().getFileSystem().getFileInfo(channel)
 
+        fileName$=fid(channel)
+        fileName$=fileName$(9)
+
         declare LinuxFileInfo lFileInfo!
-        lFileInfo! = new LinuxFileInfo(file$) 
+        lFileInfo! = new LinuxFileInfo(fileName$) 
 
 
         switch func 
         case 0 
-            xfd$(3,8)=bin(lFileInfo!.getInode())
-            xfd$(38,4)=bin(lFileInfo!.getFileSize())
-            xfd$(54,6)=bin(lFileInfo!.getLastChange())
-            xfd$(60,6)=bin(lFileInfo!.getLastAccess())
+            dim xfd$(86)
+            xfd$=fill(86,$00$)
+            
+            xfd$(3,8)=ath(str(lFileInfo!.getInode():"0000000000000000"))
+            xfd$(38,4)=ath(str(lFileInfo!.getFileSize():"00000000"))
+            xfd$(54,6)=ath(str(lFileInfo!.getLastChanged():"000000000000"))
+            xfd$(60,6)=ath(str(lFileInfo!.getLastAccess():"000000000000"))
+            xfd$(66,6)=ath(str(lFileInfo!.getLastModified():"000000000000"))
             rem todo: handle large files
             break 
         case 1 
@@ -1184,7 +1188,7 @@ REM     XFD(48,20)   = nom du tri principal
 
         class public LinuxFileInfo 
 
-                field private BBjString filePath$
+        field private BBjString filePath$
         field private BBjString device$ 
         field private BBjNumber inode
         field private BBjNumber numLinks
@@ -1192,10 +1196,11 @@ REM     XFD(48,20)   = nom du tri principal
         field private BBjNumber uid 
         field private BBjNumber gid 
         field private BBjNumber fileSize 
-        field private BBjNumber lastChange
+        field private BBjNumber lastChanged
         field private BBjNumber lastAccess
+        field private BBjNumber lastModified
 
-                method private LinuxFileInfo() 
+        method private LinuxFileInfo() 
         methodend 
 
         method public LinuxFileInfo(BBjString file$)
@@ -1243,42 +1248,50 @@ REM     XFD(48,20)   = nom du tri principal
             endif 
 
             if pos("Change:"=tmpFileInfo$,1,1)>0 then 
-                changed$=tmpFileInfo$(9,20) 
+                changed$=tmpFileInfo$(9,19) 
                 #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
                 continue 
             endif 
+            
+            if pos("Modify:"=tmpFileInfo$,1,1)>0 then 
+                lastModified$=tmpFileInfo$(9,19) 
+                #lastModified=round(TB.DTN(lastModified$,"YYYY-MM-DD HH:MI:SS"),0)
+                continue 
+            endif 
 
-                        if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
-                changed$=tmpFileInfo$(9,20) 
+            if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
+                changed$=tmpFileInfo$(9,19) 
                 #lastAccess=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
                 continue 
             endif 
+        wend 
+        
             methodret 
             LinuxFileInfoError:
             System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
         methodend 
 
-                method public BBjString getFilePath() 
+        method public BBjString getFilePath() 
             methodret #filePath$
         methodend 
 
-                method public BBjString getDevice() 
+        method public BBjString getDevice() 
             methodret #device$ 
         methodend 
 
-                method public BBjNumber getInode() 
+        method public BBjNumber getInode() 
             methodret #inode
         methodend 
 
-                method public BBjNumber getNumLinks() 
+        method public BBjNumber getNumLinks() 
             methodret #numLinks
         methodend 
 
-                method public BBjString getFileType() 
+        method public BBjString getFileType() 
             methodret #fileType$
         methodend 
 
-                method public BBjNumber getUID() 
+        method public BBjNumber getUID() 
             methodret #uid
         methodend 
 
@@ -1286,16 +1299,20 @@ REM     XFD(48,20)   = nom du tri principal
             methodret #gid
         methodend 
 
-                 method public BBjNumber getFileSize() 
-            methodend #fileSize
+        method public BBjNumber getFileSize() 
+            methodret #fileSize
         methodend 
 
-                 method public BBjNumber getLastChange() 
-            methodret #lastChange
+        method public BBjNumber getLastChanged() 
+            methodret #lastChanged
         methodend 
 
-                method public BBjNumber getLastAccess() 
+        method public BBjNumber getLastAccess() 
             methodret #lastAccess
+        methodend 
+        
+        method public BBjNumber getLastModified() 
+            methodret #lastModified
         methodend 
 
          classend 

@@ -870,14 +870,15 @@ REM         info!.setKeyName(0,newKeyName$)
 
         switch func 
         case 0 
-            dim xfd$(86)
-            xfd$=fill(86,$00$)
+            dim xfd$(85)
+            xfd$=fill(85,$00$)
             
             xfd$(3,8)=ath(str(lFileInfo!.getInode():"0000000000000000"))
             xfd$(38,4)=ath(str(lFileInfo!.getFileSize():"00000000"))
             xfd$(54,6)=ath(str(lFileInfo!.getLastChanged():"000000000000"))
             xfd$(60,6)=ath(str(lFileInfo!.getLastAccess():"000000000000"))
             xfd$(66,6)=ath(str(lFileInfo!.getLastModified():"000000000000"))
+            xfd$=xfd$+fileName$
             rem todo: handle large files
             break 
         case 1 

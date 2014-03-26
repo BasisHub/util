@@ -1206,6 +1206,10 @@ REM         info!.setKeyName(0,newKeyName$)
 
         method public LinuxFileInfo(BBjString file$)
         seterr LinuxFileInfoError
+        
+        PRC=tcb(14)
+        PRECISION 4
+        
         rem *nix OS 
         ch=unt 
         open(ch)"| /usr/bin/stat "+file$ 
@@ -1217,7 +1221,7 @@ REM         info!.setKeyName(0,newKeyName$)
                 continue
             endif 
 
-                        rem device infomation 
+           rem device infomation 
            if tmpFileInfo$(1,6)="Device" then 
              device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
              #device$=fill(8-len(device$),"0")+device$
@@ -1240,7 +1244,7 @@ REM         info!.setKeyName(0,newKeyName$)
                                 gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
                 #gid=num(gid$)
 
-                                rem todo: Device ID. This entry is valid only for Block and character special devices
+                rem todo: Device ID. This entry is valid only for Block and character special devices
                 continue 
             endif 
             if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
@@ -1250,25 +1254,26 @@ REM         info!.setKeyName(0,newKeyName$)
 
             if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,19) 
-                #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
+                #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS")*1000,0)
                 continue 
             endif 
             
             if pos("Modify:"=tmpFileInfo$,1,1)>0 then 
                 lastModified$=tmpFileInfo$(9,19) 
-                #lastModified=round(TB.DTN(lastModified$,"YYYY-MM-DD HH:MI:SS"),0)
+                #lastModified=round(TB.DTN(lastModified$,"YYYY-MM-DD HH:MI:SS")*1000,0)
                 continue 
             endif 
 
             if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
                 changed$=tmpFileInfo$(9,19) 
-                #lastAccess=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0)
+                #lastAccess=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS")*1000,0)
                 continue 
             endif 
         wend 
-        
+            PRECISION PRC
             methodret 
             LinuxFileInfoError:
+            PRECISION PRC
             System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
         methodend 
 

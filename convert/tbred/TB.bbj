@@ -103,7 +103,7 @@ class public TB
             let datedec=datedec+num(dateval$(x,2))/24/60/60
         fi
 
-                return_dtn:
+        return_dtn:
         PRECISION prc
         dtn = jul(dt$,mk$)-1721423
         methodret dtn+datedec
@@ -150,7 +150,7 @@ REM         seterr NTDJ_err
 
         let x=pos("MON"=datemask$)
         if x<>0 then
-             uppercase=1
+             mupper=1
              datemask! = datemask$
              let datemask$=datemask!.replaceAll("MON","%Ms")
         fi
@@ -163,11 +163,10 @@ REM         seterr NTDJ_err
 
         let x=pos("DY"=datemask$)
         if x<>0 then
-             uppercase=1
+             dupper=1
              datemask! = datemask$
              let datemask$=datemask!.replaceAll("DY","%Ds")
         fi
-
 
 
 	let x=pos("DDD"=datemask$)
@@ -203,7 +202,7 @@ REM         seterr NTDJ_err
             datedecval=mod(datedecval,1)
             datedec=round(datedec-(datedecval/10000),4)
 
-                        datemask!=datemask$
+            datemask!=datemask$
             datemask$=datemask!.replaceAll(".SSSSSS","")
             if datedec>0 then 
                 datedec$=str(datedecval:".000000")
@@ -211,19 +210,50 @@ REM         seterr NTDJ_err
 
                    fi
 
-                datemask! = datemask$ 
+        datemask! = datemask$ 
         datemask$ = datemask!.replaceAll("Day","%Dl")
 
-                if datedec>0 
-            ntd$=date(num(str(dateval+1721423)),datedec:datemask$)+datedec$
+        numDate=num(str(dateval+1721423))
+
+        if datedec>0 
+            ntd$=date(numDate,datedec:datemask$)+datedec$
         else  
-            ntd$=date(num(str(dateval+1721423)):datemask$)+datedec$
+            ntd$=date(numDate:datemask$)+datedec$
+        endif 
+        
+        declare String ntd! 
+        ntd! = ntd$
+
+        if stbl("!LOCALE")="fr_FR" then 
+            if pos("%Ds"=datemask$)>0 then 
+                day$=date(numDate:"%Ds") 
+                if len(day$)>3 then 
+                    nday$=cvs(day$(1,1),4)+day$(2,2)
+                    if dupper then nday$=cvs(nday$,4) endif 
+                    ntd! = ntd!.replaceAll(day$,nday$)
+                endif
+            endif 
+            if pos("%Ms"=datemask$)>0 then 
+                month$=date(numDate:"%Ms") 
+                if len(month$)>3 then 
+                    nmonth$=cvs(month$(1,1),4)+month$(2,2)
+                    if mupper then nmonth$=cvs(nmonth$,4) endif 
+                    ntd! = ntd!.replaceAll(month$,nmonth$)
+                endif
+            endif 
+            
+            if pos("%Dl"=datemask$)>0 then 
+                lday$=date(numDate:"%Dl") 
+                    nlday$=cvs(lday$(1,1),4)+lday$(2)
+                    ntd! = ntd!.replaceAll(lday$,nlday$)
+                endif
+            endif 
+    
         endif 
 
-
-
-                return_tnd:
-        if uppercase then ntd$=cvs(ntd$,4)
+        ntd$=ntd!
+        return_tnd:
+REM         if uppercase then ntd$=cvs(ntd$,4)
         methodret ntd$
         NTDJ_err:
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err

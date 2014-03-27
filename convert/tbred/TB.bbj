@@ -341,13 +341,11 @@ REM             let stringa$=cvs(stringa$,16)
             if len(stringa$)=0 then
                 valore=valore-4
             fi
-            let temp$=$$
-            for x=1 to len(stringa$)
-            if pos(stringa$(x,1)<$0920$)=0 then
-                let temp$=temp$+stringa$(x,1)
-            fi
-            next x
-            let stringa$=temp$
+REM             let temp$=$$
+            while POS($20$>stringa$) 
+                PP=POS($20$>stringa$)  
+                stringa$=stringa$(1,PP-1)+stringa$(PP+1)
+            wend 
             valore=valore-4
         fi
 
@@ -412,7 +410,7 @@ REM             let stringa$=cvs(stringa$,16)
         wend
        else 
 
-                   endif  
+        endif  
 
 
         goto TSKJ_exit

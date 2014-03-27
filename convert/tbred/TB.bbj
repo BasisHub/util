@@ -337,7 +337,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         fi
 
         if valore>=4 then
-            let stringa$=cvs(stringa$,16)
+REM             let stringa$=cvs(stringa$,16)
             if len(stringa$)=0 then
                 valore=valore-4
             fi

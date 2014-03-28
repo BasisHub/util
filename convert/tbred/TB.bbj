@@ -379,18 +379,45 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
 
         seterr TSKJ_err
 
-        if channel=0 then 
+        if channel=0 
         let devices$=""
-        while x<100
-            let temp$=tsk(x,err=TSKJ_exit)
-            let devices$=devices$+temp$(3,2)+"    "
-            let x=x+1
-        wend
-       else 
+        dim temp$:"type:u(1),opens:u(1),alias:c(2*=0),device:c(10*=0),phys:c(10*=0),modes:c(80*=0)"
+          while x<100
+              let temp$=tsk(x,err=TSKJ_exit)
+              alias$=temp.alias$
+              rem allow aliases longer than 2 while keeping TBD compatibility  
+              if len(alias$)>2 then 
+                alias$=alias$(len(alias$)-1,2) 
+              endif 
+              let devices$=devices$+alias$+bin(temp.opens)+$0000$
+              let x=x+1
+          wend
+          methodret devices$
+        endif 
 
-        endif  
-
-
+        declare BBjSessionInfo sInfo! 
+        declare BBjVector vec! 
+        
+        vec! = bbjapi().getSessionInfos() 
+                
+        for i=0 to vec!.size()-1 
+            sInfo! = cast(BBjSessionInfo,vec!.getItem(i))
+            
+            alias$=sInfo!.getTerminalID()
+            if len(alias$)>2 then 
+                alias$=alias$(len(alias$)-1,2) 
+            endif 
+            
+            if channel=2 and sInfo!.isBackground() then 
+                let devices$=$00000000$+alias$
+            endif 
+            
+            if channel=3 and !sInfo!.isBackground() then 
+                let devices$=devices$+alias$+"  "
+            endif 
+            
+        next i          
+        
         goto TSKJ_exit
 
         TSKJ_exit:

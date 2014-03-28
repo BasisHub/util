@@ -222,8 +222,8 @@ REM         seterr NTDJ_err
         else  
             ntd$=date(numDate:datemask$)+datedec$
         endif 
-        
-        declare String ntd! 
+
+                declare String ntd! 
         ntd! = ntd$
 
         if stbl("!LOCALE")="fr_FR" then 
@@ -243,15 +243,15 @@ REM         seterr NTDJ_err
                     ntd! = ntd!.replaceAll(month$,nmonth$)
                 endif
             endif 
-            
-            if pos("%Dl"=datemask$)>0 then 
+
+                        if pos("%Dl"=datemask$)>0 then 
                 lday$=date(numDate:"%Dl") 
                     nlday$=cvs(lday$(1,1),4)+lday$(2)
                     ntd! = ntd!.replaceAll(lday$,nlday$)
                 endif
             endif 
-    
-        endif 
+
+            endif 
 
         ntd$=ntd!
         return_tnd:
@@ -334,7 +334,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         if AND(valore$,bin(8192,8))>comp$
             let stringa$=swap(stringa$,$08$)            
         endif
-        
+
 
 
 
@@ -399,28 +399,28 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
 
         declare BBjSessionInfo sInfo! 
         declare BBjVector vec! 
-        
-        vec! = bbjapi().getSessionInfos() 
-                
-        for i=0 to vec!.size()-1 
+
+                vec! = bbjapi().getSessionInfos() 
+
+                        for i=0 to vec!.size()-1 
             sInfo! = cast(BBjSessionInfo,vec!.getItem(i))
-            
-            alias$=sInfo!.getTerminalID()
+
+                        alias$=sInfo!.getTerminalID()
             if len(alias$)>2 then 
                 alias$=alias$(len(alias$)-1,2) 
             endif 
-            
-            if channel=2 and sInfo!.isBackground() then 
+
+                        if channel=2 and sInfo!.isBackground() then 
                 let devices$=$00000000$+alias$
             endif 
-            
-            if channel=3 and !sInfo!.isBackground() then 
+
+                        if channel=3 and !sInfo!.isBackground() then 
                 let devices$=devices$+alias$+"  "
             endif 
-            
-        next i          
-        
-        goto TSKJ_exit
+
+                    next i          
+
+                goto TSKJ_exit
 
         TSKJ_exit:
         methodret devices$
@@ -899,8 +899,8 @@ REM         info!.setKeyName(0,newKeyName$)
         declare BBjFileInfo info! 
         info! = bbjapi().getFileSystem().getFileInfo(channel)
 
-        fileName$=fid(channel)
-        fileName$=fileName$(9)
+        bbjFid$=fid(channel)
+        fileName$=bbjFid$(9)
 
         declare LinuxFileInfo lFileInfo!
         lFileInfo! = new LinuxFileInfo(fileName$) 
@@ -920,19 +920,60 @@ REM         info!.setKeyName(0,newKeyName$)
             rem todo: handle large files
             break 
         case 1 
-        
-            
-        
-            break 
+            dim xfd$(40)
+            xfd$=bin(0,40)
+            device!=null() 
+            device!=#deviceList!.get(fileName$)
+            type$=$00$
+            dType$=device!.getFieldAsString("TYPE")
+            switch 1 
+            case dType$=$00$; type$=$07$;break 
+            case dType$=$01$; type$=$04$;break 
+            case dType$=$02$; type$=$08$;break 
+            swend 
+            if device!=null() then 
+                if lFileInfo!.getFileType()="d" then 
+                    type$=$01$
+                endif 
+            endif 
+
+                    xfd$(1,1)=type$
+
+                        alias$=fileName$
+            if len(alias$)>2 then alias$=alias$(len(alias$)-1,2) endif       
+            xfd$(2,2)=alias$
+
+                        if type$=$04$ then 
+              rem todo: 4-5 Current cursor row number, 0-based, binary; terminals and printers only
+              rem todo: 6-7 Current cursor column number, 0-based, binary; terminals and printers only
+              rem todo: 8-9 Maximum screen/line width, binary; terminals and printers only
+              rem todo: 10-11 Maximum screen/page height, binary; terminals and printers only
+              rem todo: 12 Spooler type, binary; printers only:
+              rem todo: 13 ockout flag, binary; printers only:
+
+                            rem windows only 14-15   Timeout value in seconds, binary; printers only
+              rem windows only 16-17  Usable screen width, binary; Windows CE only  
+              rem windows only 18-19  Usable screen height, binary; Windows CE only
+
+
+            endif 
+
+                        rem 20 unsuported 
+            rem 21 unsuported 
+            rem 22-39 unused 
+
+                        rem todo: Non-printers: Host name of device
+
+                              break 
         case 2 
             break 
         case 3 
           dim xfd$(44)
           xfd$=fill(44,$00$)
-          
-          xfd$(1,1)=$01$
-          
-          bbjFileType$=bin(info!.getFileType())     
+
+                    xfd$(1,1)=$01$
+
+                    bbjFileType$=bin(info!.getFileType())     
           switch 1
           case bbjfiletype$=$84$;xfd$(2,1)=$04$;break
           case bbjfiletype$>=$08$;xfd$(2,1)=$06$;break
@@ -966,20 +1007,20 @@ REM         info!.setKeyName(0,newKeyName$)
 
           declare BBjVector keys! 
           keys! = info!.getKeyInfo() 
-          
-          for numKey=0 to keys!.size()-1  
-          
-            dim keyInfo$(39) 
+
+                    for numKey=0 to keys!.size()-1  
+
+                      dim keyInfo$(39) 
             keyInfo$=fill(39,$00$)
             declare BBjKeyInfo keyInfo!          
-    
-            keyInfo! = info!.getKeyInfo(numKey)
+
+                keyInfo! = info!.getKeyInfo(numKey)
             keyLen = #getKeyLen(keyInfo!.getKeySegments())        
-  
-            keySegments! = keyInfo!.getKeySegments()
+
+              keySegments! = keyInfo!.getKeySegments()
             numSegments=keySegments!.size()   
-            
-  
+
+
             rem todo: check 45,1
             keyInfo$(1,1)=bin(keyLen)
             keyInfo$(2,1)=bin(numSegments)
@@ -994,8 +1035,8 @@ REM         info!.setKeyName(0,newKeyName$)
             rem bytes 27,5 = Unused
             rem todo: byte 32 = Field number (0 = no field number specified), unsigned binary get fieldnumber
             rem 33,6 not used
-            
-                   
+
+
 
             for numSegement=0 to numSegments-1            
               keySegment! = keySegments!.get(numSegement)
@@ -1005,17 +1046,40 @@ REM         info!.setKeyName(0,newKeyName$)
               segmentInfo$(2,2)=bin(keySegment!.getOffset()+1,2)
               segmentInfo$(4,1)=bin(keySegment!.getLength())    
               if keySegment!.isDescending() then segmentInfo$(5,1)="D" else segmentInfo$(5,1)="A" endif 
-              
-              keyInfo$=keyInfo$+segmentInfo$
+
+                            keyInfo$=keyInfo$+segmentInfo$
             next numSegement
             xfd$=xfd$+keyInfo$
           next numKey
                       break 
         case 5 
+            xfd$=TB.FID(channel) 
+            xfd$=xfd$+$00$
+            xfd$=xfd$+TB.XFD(channel,3)
             break 
         case 6 
+          bbjfiletype$=bbjFid$(1,1) 
+          xfd$=fill(8,$00$) 
+          switch 1
+          case bbjfiletype$=$05$;xfd$(1,1)=$0A$;break
+          case bbjfiletype$>=$20$;xfd$(1,1)=$06$;break
+          rem $00$ to $04$ default 
+          case default; xfd$(1,1)=bbjFileType$
+          swend 
+          keySize=0
+          keySize=info!.getKeySize(err=*next)
+          xfd$(2,1)=bin(keySize) 
+          xfd$(3,3)=bin(info!.getCurrentRecords(),5)
+          xfd$(7,2)=bin(info!.getRecordSize(),2)
+          sep$=java.io.File.separator
+          
+          if pos(sep$=fileName$)>0 then 
+            fileName$=fileName$(pos(sep$=fileName$,-1,1)+1)
+          endif 
+          xfd$=xfd$+fileName$        
             break 
         case 10 
+            xfd$=bin(info!.getCurrentRecords(),5)
             break 
         swend 
 
@@ -1268,11 +1332,11 @@ REM         info!.setKeyName(0,newKeyName$)
 
         method public LinuxFileInfo(BBjString file$)
         seterr LinuxFileInfoError
-        
-        PRC=tcb(14)
+
+                PRC=tcb(14)
         PRECISION 4
-        
-        rem *nix OS 
+
+                rem *nix OS 
         ch=unt 
         open(ch)"| /usr/bin/stat "+file$ 
         while 1 
@@ -1288,7 +1352,7 @@ REM         info!.setKeyName(0,newKeyName$)
              device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
              #device$=fill(8-len(device$),"0")+device$
 
-                          inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
+             inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
              #inode=num(inode$)
 
                           rem TODO: 19-20 File protection bits             
@@ -1297,13 +1361,13 @@ REM         info!.setKeyName(0,newKeyName$)
              continue
             endif 
 
-                        if pos("Uid:"=tmpFileInfo$)>0 then 
+            if pos("Uid:"=tmpFileInfo$)>0 then 
                 #fileType$=tmpFileInfo$(pos("/"=tmpFileInfo$,1,1)+1,1)
 
-                                uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
+                uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
                 #uid=num(uid$)
 
-                                gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
+                gid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,3)+1,pos("/"=tmpFileInfo$,1,3)-(pos("("=tmpFileInfo$,1,3)+1))
                 #gid=num(gid$)
 
                 rem todo: Device ID. This entry is valid only for Block and character special devices
@@ -1319,8 +1383,8 @@ REM         info!.setKeyName(0,newKeyName$)
                 #lastChanged=round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS")*1000,0)
                 continue 
             endif 
-            
-            if pos("Modify:"=tmpFileInfo$,1,1)>0 then 
+
+                        if pos("Modify:"=tmpFileInfo$,1,1)>0 then 
                 lastModified$=tmpFileInfo$(9,19) 
                 #lastModified=round(TB.DTN(lastModified$,"YYYY-MM-DD HH:MI:SS")*1000,0)
                 continue 
@@ -1378,8 +1442,8 @@ REM         info!.setKeyName(0,newKeyName$)
         method public BBjNumber getLastAccess() 
             methodret #lastAccess
         methodend 
-        
-        method public BBjNumber getLastModified() 
+
+                method public BBjNumber getLastModified() 
             methodret #lastModified
         methodend 
 

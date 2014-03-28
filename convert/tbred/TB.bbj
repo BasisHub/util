@@ -389,7 +389,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
               if len(alias$)>2 then 
                 alias$=alias$(len(alias$)-1,2) 
               endif 
-              let devices$=devices$+alias$+bin(temp.opens)+$0000$
+              let devices$=devices$+alias$+bin(temp.opens)+temp.alias$
               let x=x+1
           wend
           methodret devices$

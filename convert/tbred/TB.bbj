@@ -897,13 +897,13 @@ REM         info!.setKeyName(0,newKeyName$)
     method public static BBjString XFD(BBjNumber channel,BBjNumber func)
         dim xfd$(100) 
         declare BBjFileInfo info! 
-        info! = bbjapi().getFileSystem().getFileInfo(channel)
+        info! = bbjapi().getFileSystem().getFileInfo(channel,err=*next)
 
         bbjFid$=fid(channel)
-        fileName$=bbjFid$(9)
+        fileName$=str(bbjFid$(9),err=*next)
 
         declare LinuxFileInfo lFileInfo!
-        lFileInfo! = new LinuxFileInfo(fileName$) 
+        lFileInfo! = new LinuxFileInfo(fileName$,err=*next) 
 
 
         switch func 
@@ -920,9 +920,10 @@ REM         info!.setKeyName(0,newKeyName$)
             rem todo: handle large files
             break 
         case 1 
-            dim xfd$(40)
+            dim xfd$(39)
             xfd$=bin(0,40)
-            device!=null() 
+            fileName$=fid(channel)
+            device!=null()
             device!=#deviceList!.get(fileName$)
             type$=$00$
             dType$=device!.getFieldAsString("TYPE")
@@ -937,13 +938,13 @@ REM         info!.setKeyName(0,newKeyName$)
                 endif 
             endif 
 
-                    xfd$(1,1)=type$
+            xfd$(1,1)=type$
 
-                        alias$=fileName$
+            alias$=fileName$
             if len(alias$)>2 then alias$=alias$(len(alias$)-1,2) endif       
             xfd$(2,2)=alias$
 
-                        if type$=$04$ then 
+              if type$=$04$ then 
               rem todo: 4-5 Current cursor row number, 0-based, binary; terminals and printers only
               rem todo: 6-7 Current cursor column number, 0-based, binary; terminals and printers only
               rem todo: 8-9 Maximum screen/line width, binary; terminals and printers only
@@ -954,9 +955,11 @@ REM         info!.setKeyName(0,newKeyName$)
                             rem windows only 14-15   Timeout value in seconds, binary; printers only
               rem windows only 16-17  Usable screen width, binary; Windows CE only  
               rem windows only 18-19  Usable screen height, binary; Windows CE only
+              cmd$=device!.getFieldAsString("PHYS")
+              cmd$=cmd$(pos("LP"=cvs(cmd$,4)))
+              xfd$=xfd$+cmd$
 
-
-            endif 
+              endif 
 
                         rem 20 unsuported 
             rem 21 unsuported 
@@ -1291,10 +1294,12 @@ REM         info!.setKeyName(0,newKeyName$)
         if #deviceList!=null() then 
           #deviceList!=new LinkedHashMap() 
           declare BBjTemplatedString temp! 
-          temp! = bbjapi().makeTemplatedString("type:u(1),opens:u(1),alias:c(2*=0),device:c(10*=0),phys:c(10*=0),modes:c(80*=0)") 
+
           for i=0 to 99 
+              temp! = bbjapi().makeTemplatedString("type:u(1),opens:u(1),alias:c(2*=0),device:c(10*=0),phys:c(10*=0),modes:c(80*=0)") 
               temp!.setString(TSK(i,err=*break))
-              #deviceList!.put(temp!.getFieldAsString("ALIAS"),temp!) 
+              alias$=temp!.getFieldAsString("ALIAS")
+              #deviceList!.put(alias$,temp!) 
           next i 
         endif 
         methodret #deviceList! 
@@ -1302,7 +1307,7 @@ REM         info!.setKeyName(0,newKeyName$)
 
       method public static BBjTemplatedString getDevice(BBjString device$) 
         seterr getDeviceError
-        methodret #deviceList!.get(device$) 
+        methodret cast(BBjTemplatedString,#deviceList!.get(device$))
         getDeviceError: 
          throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
       methodend 

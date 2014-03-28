@@ -879,11 +879,11 @@ REM         info!.setKeyName(0,newKeyName$)
             dim xfd$(85)
             xfd$=fill(85,$00$)
             xfd$(1,1)=$01$
-            xfd$(3,8)=ath(str(lFileInfo!.getInode():"0000000000000000"))
-            xfd$(38,4)=ath(str(lFileInfo!.getFileSize():"00000000"))
-            xfd$(54,6)=ath(str(lFileInfo!.getLastChanged():"000000000000"))
-            xfd$(60,6)=ath(str(lFileInfo!.getLastAccess():"000000000000"))
-            xfd$(66,6)=ath(str(lFileInfo!.getLastModified():"000000000000"))
+            xfd$(3,8)=bin(lFileInfo!.getInode(),8)
+            xfd$(38,4)=bin(lFileInfo!.getFileSize(),4)
+            xfd$(54,6)=bin(lFileInfo!.getLastChanged(),6)
+            xfd$(60,6)=bin(lFileInfo!.getLastAccess(),6)
+            xfd$(66,6)=bin(lFileInfo!.getLastModified(),6)
             xfd$=xfd$+fileName$
             rem todo: handle large files
             break 
@@ -967,7 +967,7 @@ REM         info!.setKeyName(0,newKeyName$)
               dim segmentInfo$(8)
               segmentInfo$=fill(8,$00$)
               segmentInfo$(1,1)=bin(keySegment!.getField())
-              segmentInfo$(2,2)=ath(str(keySegment!.getOffset()+1:"0000"))
+              segmentInfo$(2,2)=bin(keySegment!.getOffset()+1,2)
               segmentInfo$(4,1)=bin(keySegment!.getLength())    
               if keySegment!.isDescending() then segmentInfo$(5,1)="D" else segmentInfo$(5,1)="A" endif 
               
@@ -1085,10 +1085,10 @@ REM         info!.setKeyName(0,newKeyName$)
              device$=tmpFileInfo$(pos(" "=tmpFileInfo$,1,1)+1,pos("/"=tmpFileInfo$,1,1)-pos(" "=tmpFileInfo$,1,1)-2)
              fst$(11,4)=ath(fill(8-len(device$),"0")+device$)
 
-                          inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
+             inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
              fst$(15,4)=bin(num(inode$))
 
-                          rem TODO: 19-20 File protection bits             
+             rem TODO: 19-20 File protection bits             
              numLinks$=tmpFileInfo$(pos("Links: "=tmpFileInfo$)+len("Links: "))
              fst$(23,2)=bin(num(numLinks$))
              continue

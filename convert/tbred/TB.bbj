@@ -7,12 +7,14 @@ use java.net.InetAddress
 use java.util.GregorianCalendar
 use java.util.Calendar
 use java.io.File
+use java.util.LinkedHashMap
 
 
 class public TB
 
 
     field public static BBjFileSystem fileSystem! = bbjapi().getFileSystem() 
+    field private static LinkedHashMap deviceList! = #getDeviceList()
 
     method public static BBjNumber UNT0(BBjString fichier$)
 	canal=0
@@ -700,7 +702,10 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
     rem * This string is used to create files 
     rem */
     method public static BBjString REPDSK(BBjNumber numdsk)
+        seterr REPDSKError
         methodret STBL("!DSK_D"+str(numdsk))
+        REPDSKError: 
+        throw "Invalid disk",12
     methodend
 
     rem /*
@@ -915,6 +920,9 @@ REM         info!.setKeyName(0,newKeyName$)
             rem todo: handle large files
             break 
         case 1 
+        
+            
+        
             break 
         case 2 
             break 
@@ -1215,6 +1223,27 @@ REM         info!.setKeyName(0,newKeyName$)
         DSDError:
         System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
         methodret ""
+      methodend 
+
+
+      method public static LinkedHashMap getDeviceList()
+        if #deviceList!=null() then 
+          #deviceList!=new LinkedHashMap() 
+          declare BBjTemplatedString temp! 
+          temp! = bbjapi().makeTemplatedString("type:u(1),opens:u(1),alias:c(2*=0),device:c(10*=0),phys:c(10*=0),modes:c(80*=0)") 
+          for i=0 to 99 
+              temp!.setString(TSK(i,err=*break))
+              #deviceList!.put(temp!.getFieldAsString("ALIAS"),temp!) 
+          next i 
+        endif 
+        methodret #deviceList! 
+      methodend 
+
+      method public static BBjTemplatedString getDevice(BBjString device$) 
+        seterr getDeviceError
+        methodret #deviceList!.get(device$) 
+        getDeviceError: 
+         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
       methodend 
 
 

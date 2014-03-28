@@ -384,6 +384,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         if channel=0 
         let devices$=""
         dim temp$:"type:u(1),opens:u(1),alias:c(2*=0),device:c(10*=0),phys:c(10*=0),modes:c(80*=0)"
+        dim tmpDevice$(6)
           while x<100
               let temp$=tsk(x,err=TSKJ_exit)
               alias$=temp.alias$
@@ -391,7 +392,8 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
               if len(alias$)>2 then 
                 alias$=alias$(len(alias$)-1,2) 
               endif 
-              let devices$=devices$+alias$+bin(temp.opens)+temp.alias$
+              tmpDevice$(1)=alias$+str(temp.opens)+temp.alias$
+              let devices$=devices$+tmpDevice$
               let x=x+1
           wend
           methodret devices$
@@ -400,9 +402,9 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         declare BBjSessionInfo sInfo! 
         declare BBjVector vec! 
 
-                vec! = bbjapi().getSessionInfos() 
+            vec! = bbjapi().getSessionInfos() 
 
-                        for i=0 to vec!.size()-1 
+            for i=0 to vec!.size()-1 
             sInfo! = cast(BBjSessionInfo,vec!.getItem(i))
 
                         alias$=sInfo!.getTerminalID()

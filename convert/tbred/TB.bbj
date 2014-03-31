@@ -438,6 +438,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         let temp$=fid(channel)
         if len(temp$)=2 or len(temp$)=3 then
             let fid_tbd$=temp$
+	    if len(temp$)=3 and pos(temp$(1,1)="PT")>0 then fid_tbd$=fid_tbd$(2)
             goto FIDJ_exit  
         fi
 

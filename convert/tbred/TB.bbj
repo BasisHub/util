@@ -1314,6 +1314,18 @@ REM         info!.setKeyName(0,newKeyName$)
          throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
       methodend 
 
+      method public static BBjString PKY(BBjNumber channel) 
+        seterr PKYError
+            if key(channel)=keyf(channel) then throw errmes(-1)+" in class TB at line "+str(tcb(5)),2 endif 
+            read record(channel,dir=-1)
+            pky$=keyp(channel)
+            read record(channel) 
+            methodret pky$
+        PKYError: 
+            read record(channel) 
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+      methodend 
+
 
     classend
 
@@ -1447,7 +1459,7 @@ REM         info!.setKeyName(0,newKeyName$)
             methodret #lastAccess
         methodend 
 
-                method public BBjNumber getLastModified() 
+        method public BBjNumber getLastModified() 
             methodret #lastModified
         methodend 
 

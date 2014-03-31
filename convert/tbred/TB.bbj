@@ -1317,14 +1317,16 @@ REM         info!.setKeyName(0,newKeyName$)
 
       method public static BBjString PKY(BBjNumber channel) 
         seterr PKYError
-            if key(channel)=keyf(channel) then throw errmes(-1)+" in class TB at line "+str(tcb(5)),2 endif 
-            read record(channel,dir=-1)
-            pky$=keyp(channel)
-            read record(channel) 
+            if key(channel)=keyf(channel) then goto PKYError endif 
+            read (channel,dir=-1)
+            pky$=keyp(channel,err=PKYErrorKey)
+            read (channel) 
             methodret pky$
         PKYError: 
-            read record(channel) 
-        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+            throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
+        PKYErrorKey: 
+            read (channel)
+            throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
       methodend 
 
 

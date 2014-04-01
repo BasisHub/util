@@ -23,6 +23,13 @@ addNEA:
     m_line$="FNERR 41";gosub addLine
     m_line$="NEA_ERR: RETURN 0";gosub addLine
     m_line$="FNEND";gosub addLine
+    m_line$=" REM ";gosub addLine
+    m_line$="DEF FNIF(testif47$)";gosub addLine                            
+    m_line$="return num(seval(""str(""+testif47$+"")"",err=*next))";gosub addLine
+    m_line$="if err<>47 then fnerr err";gosub addLine   
+    m_line$="return 0";gosub addLine
+    m_line$="FNEND";gosub addLine
+    
 exit 
 
 addLine:

@@ -13,6 +13,7 @@ use ::pgm.bbj::PgmLine
 replace:
 enter z$ 
 REM print(98)z$
+REM System.out.println(fid(1)+":"+z$)
 declare PgmLine p!
 p! = new PgmLine(z$) 
 z$ = p!.getBBjLine()
@@ -200,6 +201,7 @@ exit
 
 replaceVKEYEDDIRECT: 
     enter z$,filetype$
+
     beginLine$=z$(1,pos(filetype$=z$)-1)
     if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
        endLine$="" 
@@ -241,7 +243,7 @@ replaceVKEYEDDIRECT:
 
         dsknum$=createString$(beginVar,poschar-1)
         endVar=poschar
-
+       
 
         errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
         if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
@@ -252,7 +254,7 @@ replaceVKEYEDDIRECT:
             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
         else 
             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
-            if fileType$="VKEYED" then createString$=createString$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
+            if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
         endif 
         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
         z$=beginLine$+createString$+endline$
@@ -314,7 +316,7 @@ exit
 handleFileCreate: 
         enter z!
         z$=z! 
-        escape
+        
         if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
         if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
         if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
@@ -470,51 +472,7 @@ REM         System.out.println("word:"+m!.toString())
       methodret z!
     methodend 
 
-    REM /*
-    REM *
-    REM *  replace string = ALL compareString by TB.ALLBBJ(string,compareString)
-    REM * 
-    REM */ 
-    method public static String replaceAll(String z!) 
-        seterr replaceAllError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(?:IF)(.*?\ *?\bALL\b.*?)\ *?(?:THEN|OR|AND)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-        declare String statement!
-        statement! = "" 
-        while m!.find() 
-
-                        startExpr = 0
-            statement! = m!.group(1)
-            if statement!.matches(".*(\bAND\b|\bOR\b|\bIF\b).*") then 
-               startExpr= MAX(statement!.lastIndexOf(" AND ")+5,statement!.lastIndexOf(" OR ")+4)
-               startExpr= MAX(startExpr,statement!.lastIndexOf(" IF ")+4)
-            endif 
-
-                        statement!=statement!.substring(startExpr) 
-            beginLine! = z!.substring(startLine,startExpr+m!.start(1))
-            endline! = z!.substring(m!.end(1))
-
-            newLine! = newLine!+beginLine!+statement!.replaceAll("(.*?)(?:\ *?\=\ *?ALL)(.*)"," TB.ALLBBj($1,$2)") 
-            startLine=m!.end(1)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            if newLine!.matches(".*?(?:IF).*?\bALL\b.*?(?:THEN|OR|AND).*") then newLine!=#replaceAll(newLine!) endif
-            methodret newLine!
-    replaceAllError: 
-    rem donoting         
-    methodret z! 
-    methodend 
+   
 
     REM /*
     REM *

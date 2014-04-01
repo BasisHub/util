@@ -1,0 +1,73 @@
+REM /**
+REM  * bxrcvCaller.bbj
+REM  * @author atimm
+REM  *
+REM  */
+use java.lang.StringBuilder
+BEGIN 
+
+t2!=TIM
+
+numFiles=0
+dim inputList$[2,8]
+a=scall("rm /Users/atimm/git/agibbj/UTILDB/*")
+a=scall("rm /Users/atimm/git/agibbj/DBAGIV4/*")
+a=scall("rm /Users/atimm/git/agibbj/IPAGIV4/*")
+
+declare StringBuilder m_content!
+m_content! = new StringBuilder()
+declare StringBuilder m_errors! 
+m_errors! = new StringBuilder() 
+
+inputList$[1,1]="/usr2/AGI/UTILDB.list"
+inputList$[1,2]="/usr2/AGI/DBAGIV4.list"
+inputList$[1,3]="/usr2/AGI/xaa.list"
+inputList$[1,4]="/usr2/AGI/xab.list"
+inputList$[1,5]="/usr2/AGI/xac.list"
+inputList$[1,6]="/usr2/AGI/xad.list"
+inputList$[1,7]="/usr2/AGI/xae.list"
+inputList$[1,8]="/usr2/AGI/xaf.list"
+inputList$[2,1]="/Users/atimm/git/agibbj/UTILDB/"
+inputList$[2,2]="/Users/atimm/git/agibbj/DBAGIV4/"
+inputList$[2,3]="/Users/atimm/git/agibbj/IPAGIV4/"
+inputList$[2,4]="/Users/atimm/git/agibbj/IPAGIV4/"
+inputList$[2,5]="/Users/atimm/git/agibbj/IPAGIV4/"
+inputList$[2,6]="/Users/atimm/git/agibbj/IPAGIV4/"
+inputList$[2,7]="/Users/atimm/git/agibbj/IPAGIV4/"
+inputList$[2,8]="/Users/atimm/git/agibbj/IPAGIV4/"
+m_file=1 
+LET ERRCOUNT=0
+m_error$="/Users/atimm/git/agibbj/bxrcv.err"
+
+erase m_error$,err=*next 
+String m_error$ 
+m_file=1  
+counter=1
+
+declare BBjNamespace ns! 
+ns! = bbjapi().getGroupNamespace() 
+counter=0
+ns!.setValue("counter",0)      
+ 
+while 1 
+INFILE$=str(inputList$[1,m_file],err=*break)
+WORKDIR$=str(inputList$[2,m_file],err=*break)
+counter=ns!.getValue("counter") 
+if counter>0 then wait 5;continue 
+a=scall("bbj bxrcv.src - "+INFILE$+" "+WORKDIR$+" "+m_error$+" &") 
+ns!.setLock("counter",5000) 
+counter=ns!.getValue("counter") 
+ns!.setValue("counter",counter+1)
+ns!.removeLock("counter")
+m_file=m_file+1
+wend
+
+while 1 
+    counter=ns!.getValue("counter") 
+    if counter=0 then break 
+    wait 1
+wend 
+
+t1!=TIM 
+
+? t2! - t1!

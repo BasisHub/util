@@ -962,7 +962,8 @@ REM         info!.setKeyName(0,newKeyName$)
               rem windows only 18-19  Usable screen height, binary; Windows CE only
               cmd$=device!.getFieldAsString("PHYS")
               cmd$=cmd$(pos("LP"=cvs(cmd$,4)))
-              xfd$=xfd$+cmd$
+              
+              xfd$=xfd$+cvs(cmd$,16)
 
               endif 
 

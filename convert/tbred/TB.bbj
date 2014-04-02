@@ -392,7 +392,9 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
               if len(alias$)>2 then 
                 alias$=alias$(len(alias$)-1,2) 
               endif 
-              tmpDevice$(1)=alias$+str(temp.opens)+temp.alias$ 
+              opens=0 
+              if temp.opens then opens=2 endif 
+              tmpDevice$(1)=alias$+str(opens)+temp.alias$ 
               let devices$=devices$+tmpDevice$
               let x=x+1
           wend

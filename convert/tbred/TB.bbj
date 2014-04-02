@@ -926,7 +926,7 @@ REM         info!.setKeyName(0,newKeyName$)
             break 
         case 1 
             dim xfd$(39)
-            xfd$=bin(0,40)
+            xfd$=bin(0,39)
             fileName$=fid(channel)
             device!=null()
             device!=#deviceList!.get(fileName$)

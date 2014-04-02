@@ -963,7 +963,7 @@ REM         info!.setKeyName(0,newKeyName$)
               cmd$=device!.getFieldAsString("PHYS")
               cmd$=cmd$(pos("LP"=cvs(cmd$,4)))
               
-              xfd$=xfd$+cvs(cmd$,16)
+              xfd$=xfd$+cvs(cvs(cmd$,16),3)
 
               endif 
 

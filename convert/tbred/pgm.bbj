@@ -19,14 +19,13 @@ class public PgmLine
     method private PgmLine() 
     methodend 
 
-        method public PgmLine(String pgmLine!) 
+    method public PgmLine(String pgmLine!) 
     seterr createLine 
 
         if pgmLine!<>null() and pgmLine!.length()>0 then 
         #statements! = bbjapi().makeVector()
         #pgmLine! = pgmLine!
-        #pgmLine! = pgmLine!.replaceAll("REM\ *?""","REM """"")
-        
+        #pgmLine! = pgmLine!.replaceAll("REM\ *?""","REM """"")     
         #splitLine()
         #pgmLine! = #pgmLine!.replaceAll("REM\ """"","REM """)
     endif 
@@ -205,7 +204,7 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
                 REM REPLACE WINDOW 
         rem replace WIN GET LIST 
         
-        if statement!.matches(".*?WIN.\ *?\(GET\ *?LIST\).*") then statement! = StringReplace.replaceWinGet(statement!) 
+        if statement!.matches(".*?WIN\ *?\(GET\ *?LIST\).*") then statement! = StringReplace.replaceWinGet(statement!) 
         rem replace WIN GET INFO 
         if statement!.matches(".*?WINDOW\ GETINFO.*") then statement! = StringReplace.replaceWinGetInfo(statement!) 
 
@@ -268,8 +267,8 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
      pgmLine! = pgmLine!.replaceAll("(\bPGN\b)(?!\$)","PGM(-2)")
   
 
-    if pgmLine!.matches(".*GOTO.*NOUPDATE.*") then pgmLine! = pgmLine!.replaceAll("(PRINT\ *?\'GOTO\'\ *?\(\ *?NOUPDATE\ *?\,)(.*?)(\))\ *?(\;|$)","CALL""DB%WIN"",""SELECT NOUPDATE"",$2 $4")  
-
+    if pgmLine!.matches(".*GOTO.*NOUPDATE.*") then pgmLine! = pgmLine!.replaceAll("(PRINT\ *?\'GOTO\'\ *?\(\ *?NOUPDATE\ *?\,)(.*?)(\))\ *?(\;|$)","CALL""DB%WIN"",""SELECT NOUPDATE"",$2 $4")  endif
+    if pgmLine!.matches(".*GOTO.*") then pgmLine! = pgmLine!.replaceAll("(PRINT\ *?\'GOTO\'\ *?\()(.*?)(\))\ *?(\;|$)","CALL""DB%WIN"",""SELECT"",$2 $4")  endif
 
     printDROP: 
     if pgmLine!.matches(".*PRINT.*?DROP.*") then pgmLine!=pgmLine!.replaceAll("(PRINT\ *?\'DROP\'\ *?\()(.*?)(\).*?)(\;|$)","CALL ""DB%WIN"",""DELETE"",$2") endif 
@@ -766,7 +765,7 @@ rem             if newLine!.isEmpty() then methodret z! endif
         declare String newLine! 
         newLine! = new String("") 
         declare Pattern p!     
-        p! = Pattern.compile("(LET\ *?\w+?\$)\ *?\=\ *?(WIN\?\(GET\ *?LIST\))")
+        p! = Pattern.compile("(LET\ *?\w+?\$)\ *?\=\ *?(WIN\ *?\(GET\ *?LIST\))(\,|\;\$)*")
 
         declare Matcher m!
         m! = p!.matcher(z!)
@@ -779,9 +778,21 @@ rem             if newLine!.isEmpty() then methodret z! endif
 
         while m!.find() 
             beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(2))
+
+            endline!="" 
+            if m!.group(3)<>null() then 
+                if m!.group(3,err=*next)="," then 
+                    endstatement$=";"
+                else 
+                    endstatement$=m!.group(3) 
+                endif
+            endline! = z!.substring(m!.end(3)) 
+            endif 
+
             wlst$=m!.group(1).replaceAll("LET","") 
-            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETLIST"","+wlst$
+            
+
+            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETLIST"","+wlst$+endstatement$
         wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
@@ -814,7 +825,7 @@ rem             if newLine!.isEmpty() then methodret z! endif
             if ! m!.group(3).trim().isEmpty() then 
                 expr$=m!.group(3)+","+expr$
             endif
-            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETINFO"","+expr$
+            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETINFO"","""","+expr$
         wend
             if newLine!.isEmpty() then methodret z! endif 
             newLine!=newLine!+endLine!
@@ -837,7 +848,7 @@ REM /*
         declare String returnLine!
         returnLine! = new String("")
         declare Pattern p!     
-        p! = Pattern.compile("(IF)(\ \w*?\$[^OR|^AND|^THEN|^\;]*?\(.*?)(\bOR\b|\bAND\b|\bTHEN\b|\;|$)")
+        p! = Pattern.compile("(IF)(.*?)(\bTHEN\b|\;|$)")
         declare Matcher m!
         m! = p!.matcher(z!)
         
@@ -847,26 +858,17 @@ REM /*
         endLine! = new String("") 
         startLine=0
         declare String statement!
-        statement! = "" 
-        
-        
+        statement! = z! 
+               
         while m!.find() 
-        
-            beginLine! = z!.substring(startLine,m!.start(2))
-            endline! = z!.substring(m!.end(2))
-            
-            st1! = m!.group(2)   
-            st1! = st1!.replaceAll("""","""""")                             
-            
-            myStatement! = " FNIF("""+st1!+""") " 
-            
-            proceed_next:
-            newLine! = newLine!+beginLine!+myStatement!
-            startLine=m!.end(2)
-          wend                                
-            returnLine! = returnLine!+newLine!+endLine!        
-            if returnLine!.isEmpty() then methodret z! endif 
-            methodret returnLine!
+            grp!=m!.group(2)
+            if grp!.matches(".*(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\)).*") then 
+                beginLine! = statement!.substring(0,statement!.indexOf(z!.substring(m!.start(2)))) 
+                endLine! = statement!.substring(statement!.indexOf(z!.substring(m!.end(2))))
+                statement!=beginLine!+grp!.replaceAll("(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\))","FN47\$\(""$1"")")+endLine! 
+            endif          
+        wend    
+        methodret statement!
     replaceIFF47Error: 
     rem donoting         
     methodret z! 
@@ -1104,17 +1106,32 @@ z$="1412 LET EDITIP_KEY$=PKY(C_EDITIP,ERR=2344,KNUM=""test123"",END=1416);LET ED
 
 rem z$="IF A$(1,2)=""  "" THEN xxxxxx=0 FI" 
 
-z$="10011 LET WLST$=WIN?(GET LIST); PRINT 'GOTO' (NOUPDATE,""0"")"
+REM z$="10011 LET WLST$=WIN?(GET LIST); PRINT 'GOTO' (NOUPDATE,""0"")"
+REM 
+REM z$="06833 INSERT ARRAY SITE_SEM$[(J,0),(NBSEM,1)]; INSERT ARRAY SITE_CA$[(J,0),(NBSEM,1)]"
+REM 
+REM z$="8910 IF MSK_SVG$<>"""" THEN PRINT 'DROP' (MSK_SVG$),ERR=08911 "
+REM 
+REM 
+REM z$="13350 SYSTEM"
 
-z$="06833 INSERT ARRAY SITE_SEM$[(J,0),(NBSEM,1)]; INSERT ARRAY SITE_CA$[(J,0),(NBSEM,1)]"
-
-z$="8910 IF MSK_SVG$<>"""" THEN PRINT 'DROP' (MSK_SVG$),ERR=08911 "
-
-
-z$="13350 SYSTEM"
-
-z$="04011 IF K1$<>$FF$ THEN IF K1$(K4+7,K5)<K5$ THEN LET K5$=K1$(K4+7,K5)"
+REM z$="04011 IF K1$<>$FF$ THEN IF K1$(K4+7,K5)<K5$ THEN LET K5$=K1$(K4+7,K5)"
 REM z$="00683 IF MDE$="""" THEN LET MDE$=USERS_REC$[15]; IF MDE$= ALL "" "" THEN LET MDE$="""""
+REM z$="02120 DIM W$[9]; WINDOW GETINFO (W$[ALL])"
+REM 
+REM z$="2222 LET WLST$=WIN (GET LIST)"
+REM 
+REM z$="01010 LET WLST0$=WIN(GET LIST), WLST0$=WLST0$(3)"
+REM z$="10012 LET WLST$=WIN(GET LIST); PRINT 'GOTO' (NOUPDATE,""0"")"
+REM z$="20210 IF QUERY$ LIKE ""READY*"" THEN GOTO 20300; ""  Nouvelle session"
+z$="03113 IF CNTSTK_CPT=0 AND EMPLAC_REC$[1] LIKE ""[ST]"" AND CVT(EMPLAC_REC$[4],2)>"""" THEN GOTO 03212"
+z$="01050 IF LEN(CVT(FONC$(P2+1),128))=0 THEN GOTO 01100"
+z$="31210 IF CVT(OUPMP_REC$(513,6),2)>"""" THEN IF TB.DTN(DATA$[3],""YYYYMMDD"")<FNDTNA(OUPMP_REC$(513,6)) THEN GOTO 09910"
+REM z$="20161 IF CVT(PRMSYN_REC$[5],2) LIKE CVT(PRMSYN_REC$[19],2) THEN GOTO 20165"
+z$="01412 LET RVINS_KEY$=PKY(1,END=01491)"
+z$="08950 IF WINDEL=0 THEN WINDOW DELETE (TMP$(I,8)),ERR=08951"
+z$="PRINT 'GOTO' (TOTO$)"
+z$="IF MAX( LEN(MIMP_VAL$[I](3)),LEN(STR(I))+1) THEN a=1 endif"
 l! = new PgmLine(z$) 
 
 ?l!.getBBjLine()

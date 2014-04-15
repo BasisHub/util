@@ -1212,7 +1212,7 @@ REM         info!.setKeyName(0,newKeyName$)
                 rem UNIX Network Special
                 case fileType$="s";fst$(21,2)=$0044$;break  
                 case fileType$="l";fst$(21,2)=$0045$;break   
-                case default;fst$(21,2)=$004F$;break 
+                case default;fst$(21,2)=$000B$;break 
                 swend
 
                                 uid$=tmpFileInfo$(pos("("=tmpFileInfo$,1,2)+1,pos("/"=tmpFileInfo$,1,2)-(pos("("=tmpFileInfo$,1,2)+1))
@@ -1248,6 +1248,7 @@ REM         info!.setKeyName(0,newKeyName$)
                 methodret fst$+filePath$
         FSTError:
         System.out.println("Error FSTs"+str(err)+" "+str(tcb(5)))
+	throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
         methodret ""
       methodend 
 
@@ -1322,10 +1323,10 @@ REM         info!.setKeyName(0,newKeyName$)
 
       method public static BBjString PKY(BBjNumber channel) 
         seterr PKYError
-            if key(channel)=keyf(channel) then goto PKYError endif 
-            read (channel,dir=-1)
+            if key(channel,END=*NEXT)=keyf(channel,END=*NEXT) then goto PKYError endif 
+            read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
-            read (channel) 
+            read (channel,END=*NEXT) 
             methodret pky$
         PKYError: 
             throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
@@ -1421,10 +1422,12 @@ REM         info!.setKeyName(0,newKeyName$)
             endif 
         wend 
             PRECISION PRC
+	    if (ch>0) THEN CLOSE (ch)
             methodret 
             LinuxFileInfoError:
             PRECISION PRC
             System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
+	    if (ch>0) THEN CLOSE (ch)
         methodend 
 
         method public BBjString getFilePath() 

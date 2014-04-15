@@ -1245,10 +1245,9 @@ REM         info!.setKeyName(0,newKeyName$)
                     wend 
         close(ch) 
 
-                methodret fst$+filePath$
+        methodret fst$+filePath$
         FSTError:
-        System.out.println("Error FSTs"+str(err)+" "+str(tcb(5)))
-	throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
         methodret ""
       methodend 
 

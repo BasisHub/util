@@ -10,6 +10,52 @@ use org.apache.commons.lang3.StringUtils
 use java.lang.reflect.Array
 use java.lang.Boolean
 
+class public Pgm 
+
+    field public String pgmText!="" 
+
+    method private Pgm() 
+    methodend 
+    
+    method public Pgm(String fileName!) 
+        seterr PgmErr
+            declare BBjFileInfo info! 
+            ch=unt 
+            open(ch)fileName! 
+            info! = bbjapi().getFileSystem().getFileInfo(ch) 
+
+            if info!.getFileType()=3 then 
+              size=info!.getFileSize()
+              read record(ch,siz=size)text$ 
+              #pgmText! = text$            
+            else 
+                close(ch) 
+                throw "Works only with text source code",0
+            endif 
+            close(ch) 
+        methodret
+        PgmErr: 
+            close(ch) 
+            throw "Pgm:"+errmes(-1),err 
+    methodend 
+    
+    method public String getBBjProgram() 
+        dim lines![1]
+        lines! = #pgmText!.split($0A$)
+        lines![] = #pgmText!.split($0A$)
+        
+        numLines! = Array.getLength(lines!) 
+         
+        newPgm! = "" 
+        for i=0 to numLines!-1 
+            line! = new PgmLine(lines![i]) 
+            newPgm!=newPgm!+line!.getBBjLine()
+        next i 
+        
+        methodret newPgm! 
+    methodend 
+
+classend 
 
 class public PgmLine
 
@@ -34,7 +80,7 @@ class public PgmLine
      throw "error create line "+str(tcb(5))+"/"+str(pgm(-1)),255 
     methodend
 
-        method private void splitLine() 
+    method private void splitLine() 
         #statements! = bbjapi().makeVector()
         declare Pattern p!     
         p! = Pattern.compile("(?:^\d{1,5}|\bIF\b|THEN|\bOR\b|\bAND\b|\bELSE\b|\bFI\b|\bENDIF\b|\;|$)(?=(?:(?:[^""]*""){2})*[^""]*$)")
@@ -70,8 +116,6 @@ class public PgmLine
      statement! = ""
      pgmLine! = ""
 
-REM      statement! = #pgmLine! 
-    REM statement! = statement!.replaceAll("REM\ *?""","""""")
 
      for i=0 to #statements!.size()-1 
          statement! = #statements!.get(i).toString()
@@ -93,8 +137,7 @@ REM      statement! = #pgmLine!
          
          rem mode LINK - not used ORACLE 
          statement!=statement!.replaceAll("MODE\?=""LINK","MODE=""LINK") 
-REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","dec(\$00\$+ath(stbl(""!PGCHARBASE"")))") 
-        statement!=statement!.replaceAll("PGCHARBASE","ATH(STBL(""!PGCHARBASE""))")
+         statement!=statement!.replaceAll("PGCHARBASE","ATH(STBL(""!PGCHARBASE""))")
 
          rem replace open mode? mode shell with open on | 
          REM statement! = statement!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
@@ -257,7 +300,8 @@ REM          statement!=statement!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","d
      if pgmLine!.matches(".*CVT\(.*") then pgmLine! = StringReplace.substringCVT(pgmLine!) endif
      
      
-     if pgmLine!.matches(".*IF.*THEN.*") pgmLine!=StringReplace.replaceIFF47(pgmLine!) endif
+      if pgmLine!.matches(".*IF.*THEN.*") pgmLine!=StringReplace.replaceIFF47(pgmLine!,"(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\))") endif
+
 
      
      PKY: 
@@ -841,14 +885,14 @@ REM /*
     REM *  replace string = IFF47 String$(x,y)="t" LEN(A$)>=50 AND A$(50,1)="t" TB.ALLBBJ(string,compareString)
     REM * 
     REM */ 
-    method public static String replaceIFF47(String z!) 
+    method public static String replaceIFF47(String z!,String expr!) 
         seterr replaceIFF47Error
         declare String newLine! 
         newLine! = new String("") 
         declare String returnLine!
         returnLine! = new String("")
         declare Pattern p!     
-        p! = Pattern.compile("(IF)(.*?)(\bTHEN\b|\;|$)")
+        p! = Pattern.compile("(IF)(.*?)(\bTHEN\b)")
         declare Matcher m!
         m! = p!.matcher(z!)
         
@@ -859,13 +903,12 @@ REM /*
         startLine=0
         declare String statement!
         statement! = z! 
-               
         while m!.find() 
             grp!=m!.group(2)
-            if grp!.matches(".*(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\)).*") then 
+            if grp!.matches(".*"+expr!+".*") then 
                 beginLine! = statement!.substring(0,statement!.indexOf(z!.substring(m!.start(2)))) 
                 endLine! = statement!.substring(statement!.indexOf(z!.substring(m!.end(2))))
-                statement!=beginLine!+grp!.replaceAll("(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\))","FN47\$\(""$1"")")+endLine! 
+                statement!=beginLine!+grp!.replaceAll(expr!,"FN47\$\(""$1"")")+endLine! 
             endif          
         wend    
         methodret statement!
@@ -1131,7 +1174,8 @@ REM z$="20161 IF CVT(PRMSYN_REC$[5],2) LIKE CVT(PRMSYN_REC$[19],2) THEN GOTO 201
 z$="01412 LET RVINS_KEY$=PKY(1,END=01491)"
 z$="08950 IF WINDEL=0 THEN WINDOW DELETE (TMP$(I,8)),ERR=08951"
 z$="PRINT 'GOTO' (TOTO$)"
-z$="IF MAX( LEN(MIMP_VAL$[I](3)),LEN(STR(I))+1) THEN a=1 endif"
+z$="43127 IF DATE_CHIF$(2)="""" AND TEST$="""" OR TEST$[2]="""" OR test$[2](2)="""" THEN LET DATE_CHIF$=DATE_STK$(3,6)"
+z$="3344 IF CVT(TEST$,2)="""" THEN print HW"
 l! = new PgmLine(z$) 
 
 ?l!.getBBjLine()

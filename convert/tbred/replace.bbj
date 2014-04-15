@@ -12,1080 +12,1078 @@ use ::pgm.bbj::PgmLine
 
 replace:
 enter z$ 
-REM print(98)z$
-REM System.out.println(fid(1)+":"+z$)
 declare PgmLine p!
 p! = new PgmLine(z$) 
 z$ = p!.getBBjLine()
 exit 
 
-
-
-if z$(pos(" "=z$,1,1)+1,4)="REM " then exit endif
-
-if pos(">BBJ REM"=z$)>0 then
-    rem check for linenumbers
-    linenumber=num( z$(1,pos(" "=z$,1,1)),err=*next);z$=z$(1,pos(" "=z$))+"REM "+z$(pos(" "=z$,1,1)+1);goto rembbj
-    z$="REM "+z$
-endif 
-rembbj:
-
-declare String z! 
-z! = z$ 
-
-if z!.contains("<BBJ REM") then 
-    z! = z!.replaceAll("(\d{4,})\ *?REM","$1 ")
-endif 
-
-
-if z!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\ *?.*?\,.*?\,.*?,.*?\,.*?(\;|$).*") then call "replace.bbj::handleFileCreate",Z$ endif 
-
-
-z!=z$
-z! = z!.replaceAll("REM\ *?""","REM """"")
-
-
-z! = StringReplace.replaceRoundBrackets(z!)
-
-
-z! = StringReplace.replaceENV(z!)
-rem mode LINK - not used ORACLE 
-z!=z!.replaceAll("MODE\?=""LINK","MODE=""LINK") 
-z!=z!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","dec($00$+ath(stbl(""!PGCHARBASE"")))") 
-
-rem replace FINPUT by call 
-if z!.contains("FINPUT") z! = StringReplace.replaceFInput(z!) endif 
-rem remove END from REMOVE!
-if z!.contains("REMOVE") then z!=StringReplace.removeENDInStatement(z!,"REMOVE") endif 
-
-rem replace open mode? mode shell with open on | 
-REM z! = z!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
-z! = z!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
-
-
-rem raplce ALL """" 
-z! = StringReplace.replaceAll(z!) 
-
-rem replace insert array 
-z! = StringReplace.replaceArray(z!,"INSERT")
-rem replace delete array 
-z! = StringReplace.replaceArray(z!,"DELETE") 
-
-rem replace like with TB.LIKE 
-z! = StringReplace.replaceLike(z!)
-
-rem replace WindowShape 
-z! = StringReplace.replaceWindowShape(z!) 
-
-
-
-rem replace SYSTEM with scall 
-if z!.matches(".*\bSYSTEM\b.*") then z! = StringReplace.replaceSystem(z!) endif
-
-rem replace ADDSORT 
-if z!.contains("ADDSORT") then z!=StringReplace.replaceAddSort(z!) endif 
-rem replace REMSORT 
-if z!.contains("REMSORT") then z!=StringReplace.replaceRemSort(z!) endif 
-rem replace RENAME 
-if z!.contains("RENAME") then z!=StringReplace.replaceRename(z!) endif 
-
-rem replace GETSCREEN
-if z!.matches(".*WIN\?\(GET\ *?SCREEN\).*") then 
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?SCREEN\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETSCREEN"",$2$4")
-endif 
-
-rem replace GET ROW 
-if z!.matches(".*?WIN\?\(GET\ *?ROW\ *?\,.*") then 
-    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?ROW\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETROW"",$4$5")
-endif 
-
-rem replace GET CHAR 
-if z!.matches(".*?WIN\?\(GET\ *?CHAR\ *?\,.*") then 
-    z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CHAR\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCHAR"",$4$5")
-endif 
-
-rem replace WIN GET 
-if z!.matches(".*?WIN\?\(GET\ *?\).*") then 
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GET"",$2$4")
-endif  
-
-rem repalce WINDOW PUT COLOR 
-if z!.matches(".*?WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCOLOR"",$1$2")
-endif 
-
-rem replace WINDOW PUT
-if z!.matches(".*?WINDOW\ *?PUT\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUT"",$1$2")
-endif 
-
-rem repalce WINDOW PUT ATTR CHAR 
-if z!.matches(".*?WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTATTR"",$1$2")
-endif 
-
-rem repalce WINDOW PUT CHAR 
-if z!.matches(".*?WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\).*") then 
-    z!=z!.replaceAll("WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCHAR"",$1$2")
-endif 
-
-rem replace get CURSOR PHY 
-if z!.matches(".*?WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\).*") then 
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSORPHYSICAL"",$2$4")                                   
-endif 
-
-rem replace get CURSOR  
-if z!.matches(".*?WIN\(GET\ *?CURSOR\ *?\).*") then 
-    z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\(GET\ *?CURSOR\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSOR"",$2$4")                                   
-endif 
-
-REM make sure there is a , after print ATTR
-z! = z!.replaceAll("(PRINT\ *?'ATTR'\ *?\(.*?\))(?!\,)(.*?)(\;|$)","$1,$2$3") 
-
-rem replace close(0) 
-z! = z!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
-
-rem replace DEV 
-z! = z!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+\$0D\$$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
-
-rem can use opt as variable replace mode?= by opt= 
-z! = z!.replaceAll("MODE\?\=","OPT\=") 
-
-rem replace DSK system var but not in REPDSK method 
-z! = z!.replaceAll("(?<=\=\ )(DSK)(?=(?:(?:[^""]*""){2})*[^""]*$)","TB.REPDSK(DSK)") 
-
-REM REPLACE WINDOW 
-rem replace WIN GET LIST 
-z! = StringReplace.replaceWinGet(z!) 
-rem replace WIN GET INFO 
-z! = StringReplace.replaceWinGetInfo(z!) 
-
-REM replace WINDOW DELETE 
-z! = z!.replaceAll("(?i)WINDOW\ *?DELETE\ *?\((ALL)\)","CALL ""DB%WIN"",""DELETE"",""$1""")
-z! = z!.replaceAll("WINDOW\ *?DELETE\ *?\((.*?)\)","CALL ""DB%WIN"",""DELETE"",$1")
-
-rem replace String DSK 
-if z!.matches(".*?\bSTRING\b.*?") then z! = z!.replaceAll("(STRING\ *?)(\w+.*?)\,(.*?)(\,0)","$1 TB.REPDSK\($3\)+$2") endif
-
-rem replace param
-z! = z!.replaceAll("ARGV\(ARGC-1\)","STBL\(""!IPL"",ERR=\*next\)")  
-z! = z!.replaceAll("ARGV\(2\)","STBL\(""!IPL"",ERR=\*next\)") 
-
-rem replace SEP by SEP$ 
-z! =z!.replaceAll("\bSEP\b(?!\$)","SEP\$") 
-
-rem remove err in START 
-z!=z!.replaceAll("(START\ *?\d{1,})(,ERR=\d{4,}\,)","$1,")  
-
-rem replace RELEASE another session killSEssion 
-z! = z!.replaceAll("(RELEASE\ *?)(\w.*?)(\;|$)","TB.killSession($2)$3") 
-
-rem raplce IFF47
-rem z!=StringReplace.replaceIFF47(z!)
-
-REM rem handle num with NTP and SIZ
-REM z! = z!.replaceAll("(LET.*?)(\,NTP\=0\,SIZ\=\.01\))","_precision=tcb(14);PRECISION 2;$1\);PRECISION _precision")
-
-z! = StringReplace.replaceCallTailingSpaces(z!)
-REM replace DOM -> ERR in call 
-z! = z!.replaceAll("(CALL\ *?.*?\,)DOM\=","$1ERR=")  
-
-z! = StringReplace.replaceCVT(z!)
-
-z! = z!.replaceAll("REM\ """"","REM """)
-
-z$=z!
-exit 
-
-
-
-replaceVKEYEDDIRECT: 
-    enter z$,filetype$
-
-    beginLine$=z$(1,pos(filetype$=z$)-1)
-    if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
-       endLine$="" 
-        if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
-        if pos(filetype$=createString$)=0 then exit 
-        createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
-        beginVar=pos(filetype$=createString$)+len(filetype$) 
-        endVar = pos(","=createString$)-beginVar
-        file$=createString$(beginVar,endVar)
-        beginVar=pos(","=createString$,1,1)+1
-        endVar=pos(","=createString$,1,2)-beginVar 
-        keyChainString$=createString$(beginVar,endVar)
-
-                if pos(":["=keyChainString$)>0 then 
-          beginVar=1
-          endVar = pos(":["=keyChainString$,1,1)-beginVar
-          keyName$=keyChainString$(beginVar,endVar)                
-          beginVar=pos(":["=keyChainString$)+1
-          keyChain$=keyChainString$(beginVar)
-        else 
-          keyName$="" 
-          keyChain$=keyChainString$
-        endif 
-
-        nbrec=0
-        beginVar=pos(","=createString$,1,3)+1
-        endVar = pos(","=createString$,1,4)-beginVar
-        reclen$=createString$(beginVar,endVar) 
-
-        beginVar=pos(","=createString$,1,4)+1
-        tmp$=createString$(beginVar)
-        ok=1
-        posChar=0
-        for i=1 to len(tmp$)
-            if tmp$(i,1)="(" then ok=0;continue 
-            if tmp$(i,1)=")" then ok=1;continue 
-            if ok and tmp$(i,1)="," then posChar=i;break
-        next i 
-
-        dsknum$=createString$(beginVar,poschar-1)
-        endVar=poschar
-       
-
-        errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
-        if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
-              errExit$=""
-          endif  
-        VNOERR:
-        if keyName$>"" then 
-            createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
-        else 
-            createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
-            if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
-        endif 
-        if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
-        z$=beginLine$+createString$+endline$
-exit 
-
-
-replaceINDEXEDSORT: 
-    enter z$,filetype$
-    beginLine$=z$(1,pos(filetype$=z$)-1)
-    if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
-       endLine$="" 
-        if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
-        if pos(filetype$=createString$)=0 then exit 
-        createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
-        beginVar=pos(filetype$=createString$)+len(filetype$) 
-        endVar = pos(","=createString$)-beginVar
-        file$=createString$(beginVar,endVar)
-
-        beginVar=pos(","=createString$,1,1)+1
-        endVar=pos(","=createString$,1,2)-beginVar 
-        keyChain$=createString$(beginVar,endVar)
-
-        beginVar=pos(","=createString$,1,2)+1
-        endVar = pos(","=createString$,1,3)-beginVar
-        reclen$=createString$(beginVar,endVar) 
-
-        beginVar=pos(","=createString$,1,3)+1
-        tmp$=createString$(beginVar)
-        ok=1
-        posChar=0
-        for i=1 to len(tmp$)
-            if tmp$(i,1)="(" then ok=0;continue 
-            if tmp$(i,1)=")" then ok=1;continue 
-            if ok and tmp$(i,1)="," then posChar=i;break
-        next i 
-
-        dsknum$=createString$(beginVar,poschar-1)
-        endVar=poschar
-
-
-
-          errExit$=str(createString$(pos(","=createString$,-1,1)),err=INOERR) 
-          if str(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
-              errExit$=""
-          endif 
-        INOERR: 
-
-                if filetype$="SORT" then 
-        filetype$="VKEYED"
-            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
-        else 
-            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$+errExit$
-        endif 
-        if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceINDEXEDSORT",endline$,filetype$ endif
-        z$=beginLine$+createString$+endline$
-exit
-
-
-handleFileCreate: 
-        enter z!
-        z$=z! 
-        
-        if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
-        if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
-        if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
-        if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif 
-        z!=z$
-exit 
-
-
-
-
-class public StringReplace
-
-        method public static boolean matchesKeyword(String keyword!)
-        declare LinkedHashMap keyWordMap! 
-        keyWordMap! = new LinkedHashMap()
-        keyword! = keyword!.toUpperCase()
-
-        keyWordMap!.put("FILL","") ; keyWordMap!.put("CLOSE","");keyWordMap!.put("WRITE","");keyWordMap!.put("STBL","")
-        keyWordMap!.put("JUL","");keyWordMap!.put("LOCK","");keyWordMap!.put("UNLOCK","");keyWordMap!.put("ERASE","")
-        keyWordMap!.put("TBL","");keyWordMap!.put("IF","")
-        keyWordMap!.put("INPUT",""); keyWordMap!.put("FINPUT",""); keyWordMap!.put("READ","") ; keyWordMap!.put("EXTRACT",""); keyWordMap!.put("PREAD","")
-        keyWordMap!.put("PEXTRACT",""); keyWordMap!.put("RECORD",""); keyWordMap!.put("OPEN",""); keyWordMap!.put("REMOVE",""); keyWordMap!.put("PRINT","") 
-        keyWordMap!.put("KEYL","");keyWordMap!.put("KEYF","");keyWordMap!.put("KEYN","");keyWordMap!.put("KEYP","")
-
-        keyWordMap!.put("INFO","")
-        keyWordMap!.put("WINDOW","")
-        keyWordMap!.put("SHAPE","") 
-        keyWordMap!.put("WIN","")
-        keyWordMap!.put("GETINFO","")
-        keyWordMap!.put("SEVAL","")
-        keyWordMap!.put("MIN","")
-        keyWordMap!.put("MAX","")
-        keyWordMap!.put("AND","")
-        keyWordMap!.put("OR","")
-        keyWordMap!.put("COLOR","")
-        keyWordMap!.put("CHAR","")
-        keyWordMap!.put("PUT","")
-        keyWordMap!.put("ERRMES","")
-        keyWordMap!.put("POS","")
-        keywordMap!.put("REM","")
-        keywordMap!.put("WHILE","")
-        keywordMap!.put("DIR","")
-        keywordMap!.put("XOR","")
-
-        keyWordMap!.put("ABS","") ; keyWordMap!.put("ACS","") ; keyWordMap!.put("ASC","") ; keyWordMap!.put("ASN","") ; keyWordMap!.put("ATN","") ; keyWordMap!.put("ATQ","") 
-        keyWordMap!.put("BSZ","") ; keyWordMap!.put("COS","") ; keyWordMap!.put("DEC","") ; keyWordMap!.put("DTN","") ; keyWordMap!.put("EPT","") ; keyWordMap!.put("ERR","")
-        keyWordMap!.put("EXP","") ; keyWordMap!.put("FIX","") ; keyWordMap!.put("FPT","") ; keyWordMap!.put("IND","") ; keyWordMap!.put("INT","") ; keyWordMap!.put("LEN","") 
-        keyWordMap!.put("LOG","") ; keyWordMap!.put("MAX","") ; keyWordMap!.put("MIN","") ; keyWordMap!.put("MOD","") ; keyWordMap!.put("NEA","") ; keyWordMap!.put("NLG","")
-        keyWordMap!.put("NMV","") ; keyWordMap!.put("NUM","") ; keyWordMap!.put("RND","") ; keyWordMap!.put("SGN","") ; keyWordMap!.put("SIN","") 
-        keyWordMap!.put("SQR","") ; keyWordMap!.put("SSZ","") ; keyWordMap!.put("STL","") ; keyWordMap!.put("TAN","") ; keyWordMap!.put("TCB","") ; keyWordMap!.put("UNT","") 
-        keyWordMap!.put("AND","") ; keyWordMap!.put("ARG","") ; keyWordMap!.put("ATH","") ; keyWordMap!.put("ATR","") ; keyWordMap!.put("BIN","") ; keyWordMap!.put("CGV","") 
-        keyWordMap!.put("CHR","") ; keyWordMap!.put("CPL","") ; keyWordMap!.put("CPP","") ; keyWordMap!.put("CRC","") ; keyWordMap!.put("CVT","") ; keyWordMap!.put("DCM","") 
-        keyWordMap!.put("DIM","") ; keyWordMap!.put("DSD","") ; keyWordMap!.put("DSK","") ; keyWordMap!.put("DTR","") ; keyWordMap!.put("ERM","") ; keyWordMap!.put("FID","")
-        keyWordMap!.put("FKY","") ; keyWordMap!.put("FMD","") ; keyWordMap!.put("FMT","") ; keyWordMap!.put("FST","") ; keyWordMap!.put("GAP","") ; keyWordMap!.put("HSH","")
-        keyWordMap!.put("HTA","") ; keyWordMap!.put("INF","") ; keyWordMap!.put("IOR","") ; keyWordMap!.put("KEY","") ; keyWordMap!.put("LKY","") ; keyWordMap!.put("LRC","") 
-        keyWordMap!.put("LST","") ; keyWordMap!.put("MNE","") ; keyWordMap!.put("NOT","") ; keyWordMap!.put("NTD","") ; keyWordMap!.put("PAD","") ; keyWordMap!.put("PCK","") 
-        keyWordMap!.put("PFL","") ; keyWordMap!.put("PFP","") ; keyWordMap!.put("PGM","") ; keyWordMap!.put("PKY","") ; keyWordMap!.put("PUB","") ; keyWordMap!.put("RTD","") 
-        keyWordMap!.put("SDX","") ; keyWordMap!.put("STR","") ; keyWordMap!.put("SWP","") ; keyWordMap!.put("TBL","") ; keyWordMap!.put("TSK","") ; keyWordMap!.put("UCM","") 
-        keyWordMap!.put("UPK","") ; keyWordMap!.put("WIN","") ; keyWordMap!.put("XFD","") 
-
-
-
-
-REM         keyWordMap!.put("","") ;
-REM         keyWordMap!.put("","") ;
-REM         keyWordMap!.put("","") ;
-REM         keyWordMap!.put("","") ;
-REM         keyWordMap!.put("","") ;
-
-                if keyWordMap!.containsKey(keyword!.trim()) then methodret bbjapi().TRUE endif 
-
-                   methodret bbjapi().FALSE
-    methodend 
-
-        rem  replace global vars like ]USER$ -> ENV_USER$   
-    method public static String replaceENV(String z!)  
-        z!=z!.replaceAll("\](?=\b\w+)\b","_")    
-        REM replace QUO WITH """ 
-        z!=z!.replaceAll("(?<=\+)QUO|QUO(?=\+)|(?<=\+)QUO(?=\+)","""") 
-        methodret z!
-    methodend
-
-
-    REM /* 
-    REM / replaces round brackets by [] for 
-    REM */
-    method public static String replaceRoundBrackets(String z!) 
-        seterr replaceBracketsError
-        declare Pattern p! 
-        seterr 0
-REM     p! = Pattern.compile("\w+(\ *\()")
-        p! = Pattern.compile("(\w+\ *?\()(?=(?:(?:[^""]*""){2})*[^""]*$)")
-       rem  \b\w+\ *?(\()(?=(?:(?:(?:[^""\\]++|\\.)*+""){2})*+(?:[^""\\]++|\\.)*+$)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-        declare String keyword! 
-        while m!.find() 
-        keyword! = m!.group(0)
-        keyword! = keyword!.substring(0,keyword!.length()-1).trim()  
-        rem check for methods 
-        if m!.start()>0 then if z!.substring(m!.start()-1,m!.start())="." then continue endif endif
-        rem check for templates 
-        if m!.start()>0 then if z!.substring(m!.start()-1,m!.start())=":" then continue endif endif
-
-        rem check for custom functions 
-        if keyword!.startsWith("FN") then continue endif 
-        rem except for ARGV
-        if keyword!.startsWith("ARGV") then continue endif 
-        if StringReplace.matchesKeyword(keyword!) then continue endif 
-REM         System.out.println("word:"+m!.toString())        
-        posClosingBracket=z!.indexOf(")",m!.start());if posClosingBracket=-1 then methodret z! endif 
-        rem don't convert it String does not contain closing bracket 
-        if closingBracket=-1 then methodret z! endif 
-        if posClosingBracket=z!.length() then endline=z!.length() else endline=posClosingBracket+1 endif
-        posBracket = z!.indexOf("(",m!.start())
-
-                rem check for openning brackets between the opening and the first closing one 
-        noOpeningBrackets = StringUtils.countMatches(z!.substring(posBracket,posClosingBracket),"(")  
-
-        if noOpeningBrackets>0 then 
-            tmp$=z!.substring(m!.start()) 
-            posClosingBracket=m!.start()+pos(")"=tmp$,1,noOpeningBrackets)-1
-        endif            
-
-           z! = z!.substring(0,m!.start())+keyword!+"["+z!.substring(posBracket+1,posClosingBracket)+"]"+z!.substring(posClosingBracket+1)
-        wend
-        methodret z!
-        replaceBracketsError: 
-          if pos("StringIndexOutOfBoundsException"=errmes(-1)) >0 then System.out.println(z!);methodret z! 
-    methodend 
-
-   method public static String removeENDInStatement(String z!,String keyword!) 
-      if ! z!.contains(keyword!) then methodret z! 
-
-      beginVar = z!.indexOf(keyword!)
-      endVar = z!.indexOf(")",beginVar)
-      beginLine! = z!.substring(0,beginVar)
-      sok=0 
-      endline! = z!.substring(endVar,err=*next);sok=1
-      if ! sok then methodret z! endif
-      statement! = z!.substring(beginVar,endVar) 
-
-      beginEnd=statement!.indexOf("END=") 
-      if beginEnd=-1 then methodret z! endif 
-      if statement!.indexOf(",",beginEnd)=-1 then 
-        statement! = statement!.substring(0,beginEnd-1)
-      else 
-        statement! = statement!.substring(0,beginEnd)+statement!.substring(statement!.indexOf(",",beginEnd)+1) 
-      endif
-      if endline!.contains(keyword!) then endline!=#removeENDInStatement(endline!,keyword!) 
-      z!=beginLine!+statement!+endline!
-
-      methodret z!
-    methodend 
-
-   
-
-    REM /*
-    REM *
-    REM *  replace string = INSERT ARRAY call "TBUTILS.bbj::INSERTARRAY",ARRAY[ALL],options
-    REM * 
-    REM */ 
-    method public static String replaceArray(String z!,String function!) 
-        seterr replaceArrayError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("((?i)"+function!+"\ ARRAY\ ?(.*?))\[\((.*?)(\)\])(\;|$)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(4))
-            arrayname$=m!.group(2)
-            arrayType$="N"
-            if arrayname$(len(arrayname$),1)="$" then arrayType$="S" endif
-REM             dim x![1]
-            tmp$ = m!.group(3) 
-REM             tmp! = tmp!.replaceAll("\,((.)(?<!\()(?!\)))",",$1$1")
-REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
-            ok=1
-            posChar=0
-            for i=1 to len(tmp$)
-                if tmp$(i,1)="(" then ok=0;continue 
-                if tmp$(i,1)=")" then ok=1;continue 
-                if ok and tmp$(i,1)="," then posChar=i;break
-            next i 
-            newLine! = newLine!+beginLine!+" call ""DB%"+arrayType$+"ARRAY"","""+function!+""","+arrayname$+"[ALL],"+tmp$(1,i-1)+","+tmp$(i+1)
-            startLine=m!.end(4)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceArrayError: 
-    rem donoting         
-    methodret z! 
-    methodend 
-
-    REM /*
-    REM *
-    REM *  replace like
-    REM * 
-    REM */ 
-    method public static String replaceLike(String z!) 
-        seterr replaceLikeError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)\ ((?i)LIKE\ ?)(.*?)(\=0|\bTHEN\b|\bAND\b|\bOR\b)")       
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-                while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(3))
-            newLine! = newLine!+beginLine!+" TB.LIKE("+m!.group(1).trim()+","+m!.group(3).trim()+") "
-            startLine=m!.end(3)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-REM             System.out.println(z!)
-            methodret newLine!
-    replaceLikeError: 
-    rem donoting         
-    methodret z! 
-    methodend 
-
-    rem /* 
-    rem * replace WINDOW SHAPE (LINE,HORIZONTAL,0,1,33) ""BORDERATR=BG"""
-    rem * CALL "DB%WINSHAP","LINE",0,0,1,33,"BORDERATR=BG"
-    rem * only works with one occurrence per line 
-    rem */
-    method public static String replaceWindowShape(String z!) 
-        seterr replaceWindowShapeError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(WINDOW\ *SHAPE)\ *\((.*)\,(.*)\,(.*)\,(.*)\,(.*)\)(.*)")
-
-                declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-                while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(7))
-            HV=-1
-            if m!.group(3)="HORIZONTAL" then HV=0 endif 
-            if m!.group(3)="VERTICAL" then HV=1 endif
-            if HV=-1 then 
-                newLine! = newLine!+beginLine!+" CALL ""DB%WINSHAP"","+m!.group(2)+","+m!.group(4)+","+m!.group(5)+","+m!.group(6)+","+m!.group(7)
-            else 
-                newLine! = newLine!+beginLine!+" CALL ""DB%WINSHAP"","+m!.group(2)+","+str(hv)+","+m!.group(5)+","+m!.group(6)+","+m!.group(7)
-            endif
-            startLine=m!.end(3)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-REM             System.out.println(z!)
-            methodret newLine!
-    replaceWindowShapeError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-    method public static String replaceFInput(String z!) 
-        seterr replaceFInputError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        if !z!.contains("FINPUT") then methodret z! endif 
-        p! = Pattern.compile("(?:(EDT\=.*?)(\,|\))|(TIM\=.*?)(\,|\))|(ERR\=\d.*)(\,|\)))")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        declare LinkedHashMap map! 
-        map! = new LinkedHashMap()
-        declare String tmp!
-        tmp! = new String("")  
-        while m!.find() 
-              tmp! = m!.group(0) 
-              map!.put(tmp!.substring(0,tmp!.indexOf("=")),tmp!.substring(tmp!.indexOf("=")+1,tmp!.length()-1))         
-        wend
-              newLine! = "CALL ""DB%FINPUT"","+"ERR="+str(map!.get("ERR"))+",COLN,LIGN,LONG_AFF,LONG_SAI,"
-              if map!.containsKey("TIM") then 
-                newLine! = newLine!+map!.get("TIM")+","
-              else 
-                newLine! = newLine!+"0,"
-              endif
-              if map!.containsKey("EDT") then 
-                newLine! = newLine!+map!.get("EDT")+","
-              else 
-                newLine! = newLine!+""""","
-              endif              
-              newLine! = newLine!+"E$,FCT" 
-        methodret newLine!
-    replaceFInputError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-    rem * 
-    rem * replace ADDSORT
-    rem */
-    method public static String replaceAddSort(String z!) 
-        seterr replaceADDSORTError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(ADDSORT)\ (.*?)\,(.*?)\:(.*?)\,([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = ""
-            keyString!=m!.group(4) 
-            keyString! = keyString!.replaceAll("""","""""")            
-            newLine! = newLine!+beginLine!+"TB.ADDSORT(TB.REPDSK("+m!.group(5)+")+"+m!.group(2)+","+m!.group(3)+","""+keyString!+""")"
-            if z!.substring(m!.end(5)).indexOf(";")>-1 then endLine=m!.end(5) endif 
-            startline=m!.end(5)
-            wend
-            if newLine!.isEmpty() then methodret z! endif 
-            if endline>0 then endline! = z!.substring(endline) endif
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceADDSORTError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-           rem * 
-    rem * replace REMSORT
-    rem */
-    method public static String replaceRemSort(String z!) 
-        seterr replaceREMSORTError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(REMSORT)\ (.*?)\,(?:KNUM\=)([\w\.\$\(\)\[\]\=\d\*\""\,\?\|\&\@\\\_\/\:\-\+]+)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-                while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = ""
-            newLine! = newLine!+beginLine!+"TB.REMSORT("+m!.group(2)+","+m!.group(3)+")"
-            if z!.length()>=m!.end(3) then endline=m!.end(3) endif 
-            startline=m!.end(3)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            if endline>0 then endline! = z!.substring(endline) endif
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceREMSORTError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-
-          rem * 
-    rem * replace rename
-    rem */
-    method public static String replaceRename(String z!) 
-        seterr replaceRenameError
-        declare String newLine! 
-        m_error$=CPL(z!,err=*next);methodret z! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(RENAME)\ (.*?)(?:\;|$)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-             declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        declare BBjVector vec! 
-        vec! = bbjapi().makeVector()
-
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = ""
-
-            vec! = #splitExpression(m!.group(2)) 
-            newLine! = newLine!+beginLine!+"RENAME TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(1))+",TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(2))
-            if z!.length()>=m!.end(2) then endline=m!.end(2) endif 
-            startline=m!.end(2)
-        wend
-rem             if newLine!.isEmpty() then methodret z! endif 
-            if endline>0 then endline! = z!.substring(endline) endif
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceRenameError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-
-        method public static String replaceSystem(String z!) 
-        seterr replaceSystem
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(SYSTEM)\ (.*?)(\;|$)(?=(?:(?:[^""]*""){2})*[^""]*$)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-                declare BBjVector vec! 
-        vec! = bbjapi().makeVector()
-
-                while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = ""                           
-            newLine! = newLine!+beginLine!+"dummy=scall("+m!.group(2)+")"
-            if z!.length()>=m!.end(2) then endline=m!.end(2) endif 
-            startline=m!.end(2)
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            if endline>0 then endline! = z!.substring(endline) endif
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceSystem: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-    rem replace WIN
-
-     method public static String replaceWinGet(String z!) 
-        seterr replaceWinGetError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("([LET\ ]*?\w+?\$)\ *?\=\ *?(WIN\?\ *?\(GET\ LIST\))")
-
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(2))
-            wlst$=m!.group(1).replaceAll("LET","") 
-            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETLIST"","+wlst$
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceWinGetError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-        method public static String replaceWinGetInfo(String z!) 
-        seterr replaceWinGetInfoError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(WINDOW\ GETINFO\ *?)\((.*?)\)(.*?)(?:\;|$)")
-
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(3))
-            expr$=m!.group(2)
-            if ! m!.group(3).trim().isEmpty() then 
-                expr$=m!.group(3)+","+expr$
-            endif
-            newLine! = beginLine!   +"CALL ""DB%WIN"",""GETINFO"","+expr$
-        wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceWinGetInfoError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-
-REM /*
-    REM *
-    REM *  replace string = IFF47 String$(x,y)="t" LEN(A$)>=50 AND A$(50,1)="t" TB.ALLBBJ(string,compareString)
-    REM * 
-    REM */ 
-    method public static String replaceIFF47(String z!) 
-        seterr replaceIFF47Error
-        declare String newLine! 
-        newLine! = new String("") 
-        declare String returnLine!
-        returnLine! = new String("")
-        declare Pattern p!     
-        p! = Pattern.compile("(?:\bIF\b)(.*?)(?:\bTHEN\b)")
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-        declare String statement!
-        statement! = "" 
-
-                while m!.find() 
-            statement! = m!.group(1)
-            declare Pattern p1!     
-            p1! = Pattern.compile("(\w+?\$\ *?\(.*?)(\bAND\b|\bOR\b|$)")
-            declare Matcher m1!      
-            m1! = p1!.matcher(statement!)
-            declare String myStatement!
-            myStatement! = ""
-            beginZ! = z!.substring(startLine,m!.start(1))
-            endZ! = z!.substring(m!.end(1))
-            startLine=0
-
-            declare String lenExp!
-
-                while m1!.find()         
-                beginLine! = statement!.substring(startLine,m1!.start(1))
-                endline! = statement!.substring(m1!.end(1))
-                st1! = m1!.group(1)   
-                var! = st1!.replaceAll(".*?(\w+\$).*","$1")                                 
-
-                rem find expression in () 
-                content!=st1!.substring(st1!.indexOf(var!)+var!.length()) 
-                posMatch=#findMatchingBracket(content!) 
-                if posMatch=-1 then methodret z! endif 
-
-                content!=content!.substring(1,posMatch-1)
-
-                                vec! = #splitExpression(content!) 
-
-                                lenExp! = new String("")
-                for i=0 to vec!.size()-1 
-                    lenExp! = lenExp!+vec!.getItem(i)+"+"
-                next i  
-                lenExp! = lenExp!.substring(0,lenExp!.length()-1) 
-
-                myStatement! = " (LEN("+var!+")>="+lenExp!+" AND "+st1!+" ) "
-
-                newLine! = newLine!+beginLine!+myStatement!
-                startLine=m1!.end(1)
-              wend    
-
-                             returnLine! = returnLine!+beginZ!+newLine!+endLine!
-              newLine!="" 
-              startLine=m!.end(1)
-        wend
-
-            if returnLine!.isEmpty() then methodret z! endif 
-            returnLine!=returnLine!+endZ!
-            methodret returnLine!
-    replaceIFF47Error: 
-    rem donoting         
-    methodret z! 
-    methodend 
-
-    method private static BBjNumber findMatchingBracket(String exp!) 
-        exp$=exp! 
-        if pos(")"=exp$)>0 then
-            tmp$=exp$(1,pos(")"=exp$))
-            anz=pos("("=tmp$,1,0)
-            methodret pos(")"=exp$,1,anz) 
-        endif 
-        methodret -1
-    methodend 
-
-     method private static BBjVector splitExpression(String exp!) 
-        declare BBjVector vec! 
-        vec! = bbjapi().makeVector()
-        declare String tmp!  
-        tmp! = exp! 
-        ok=0
-        startExp=0
-        for i=0 to tmp!.length()-1 
-            tmp$=tmp!.substring(i,i+1) 
-            if tmp$="(" then ok=ok+1;continue endif 
-            if tmp$=")" then ok=ok-1;continue endif
-            if tmp$="," and ok=0 then
-             posChar=i
-             vec!.add(tmp!.substring(startExp,posChar))
-             startExp=posChar+1
-            endif  
-        next i 
-        vec!.add(tmp!.substring(startExp))
-        methodret vec!
-    methodend 
-
-    rem replace CVT by CVS 
-    method public static String replaceCVT(String z!) 
-        seterr replaceCVTError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(TB\.CVT\()(.*?)(\>|\=|\<|\<\>|\;|$|\bOR\b|\bAND\b|\bTHEN\b|\bIF\b)")
-
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-                declare LinkedHashMap map! 
-        map! = new LinkedHashMap() 
-        map!.put("1","8") 
-        map!.put("2","128") 
-        map!.put("4","32") 
-        map!.put("8","4096")  
-        map!.put("16","4") 
-        map!.put("32","16") 
-        map!.put("128","2")                
-        declare String expr!
-        declare String var!
-        declare String cvtexpr!
-        declare BBjVector vec!
-
-                while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(3))
-            content!=m!.group(2)
-            expr!=""
-            vec!=#splitExpression(content!)
-
-                        var! = vec!.getItem(0).toString()
-            expr! = vec!.getItem(1).toString()
-            expr! = expr!.substring(0,expr!.length()-1)
-            ok=1 
-
-                        dim exprT![1]
-
-                                    if expr!.contains("+") then 
-                exprT![]=expr!.split("\+") 
-                exprT!=expr!.split("\+") 
-                lenExpr=Array.getLength(exprT!) 
-            else 
-                exprT![0]=expr!
-                lenExpr=1 
-            endif 
-            cvtexpr! = ""
-
-                        for i=0 to lenExpr-1
-                if map!.containsKey(exprT![i]) then 
-                    cvtexpr!=cvtexpr!+map!.get(exprT![i])+"+" 
-                else 
-                    ok=0 
-                    break
-                endif 
-            next i 
-
-                        if ok then 
-                cvtexpr!=cvtexpr!.substring(0,cvtexpr!.length()-1)
-                newLine! = newLine!+beginLine!+"CVS("+var!+","+cvtexpr!+")"+m!.group(m!.groupCount())
-                startLine=m!.end(m!.groupCount())
-            else 
-                newLine! = newLine!+beginLine!+m!.group()     
-                startLine=m!.end()
-            endif 
-
-                    wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceCVTError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-
-     rem replace CVT by CVS 
-    method public static String replaceCallTailingSpaces(String z!) 
-        seterr replaceCallTailingSpacesError
-        declare String newLine! 
-        newLine! = new String("") 
-        declare Pattern p!     
-        p! = Pattern.compile("(CALL\ *?)(\"".*?\"")(?:\bOR\b|\bAND\b|\bTHEN\b|\bIF\b|\,|\;|$)")
-
-        declare Matcher m!
-        m! = p!.matcher(z!)
-
-        declare String beginLine!
-        declare String endLine!  
-        beginLine! = new String("") 
-        endLine! = new String("") 
-        startLine=0
-
-        while m!.find() 
-            beginLine! = z!.substring(startLine,m!.start(1))
-            endline! = z!.substring(m!.end(2))
-            expr$=m!.group(2)
-            expr$=expr$(2,len(expr$)-2)
-            lenexpr=len(expr$) 
-            expr$=cvs(expr$,2)
-            lenblank=lenexpr-len(expr$)
-            newLine! = newLine!+beginLine!+"CALL """+expr$+""""+fill(lenblank," ")
-            startLine=m!.end(2)
-
-                    wend
-            if newLine!.isEmpty() then methodret z! endif 
-            newLine!=newLine!+endLine!
-            methodret newLine!
-    replaceCallTailingSpacesError: 
-    rem donoting         
-    methodret z!     
-    methodend 
-
-
-
-    classend 
+REM 
+REM 
+REM if z$(pos(" "=z$,1,1)+1,4)="REM " then exit endif
+REM 
+REM if pos(">BBJ REM"=z$)>0 then
+REM     rem check for linenumbers
+REM     linenumber=num( z$(1,pos(" "=z$,1,1)),err=*next);z$=z$(1,pos(" "=z$))+"REM "+z$(pos(" "=z$,1,1)+1);goto rembbj
+REM     z$="REM "+z$
+REM endif 
+REM rembbj:
+REM 
+REM declare String z! 
+REM z! = z$ 
+REM 
+REM if z!.contains("<BBJ REM") then 
+REM     z! = z!.replaceAll("(\d{4,})\ *?REM","$1 ")
+REM endif 
+REM 
+REM 
+REM if z!.matches(".*(\bINDEXED\b|\bSORT\b|\bDIRECT\b|\bVKEYED\b)\ *?.*?\,.*?\,.*?,.*?\,.*?(\;|$).*") then call "replace.bbj::handleFileCreate",Z$ endif 
+REM 
+REM 
+REM z!=z$
+REM z! = z!.replaceAll("REM\ *?""","REM """"")
+REM 
+REM 
+REM z! = StringReplace.replaceRoundBrackets(z!)
+REM 
+REM 
+REM z! = StringReplace.replaceENV(z!)
+REM rem mode LINK - not used ORACLE 
+REM z!=z!.replaceAll("MODE\?=""LINK","MODE=""LINK") 
+REM z!=z!.replaceAll("ASC\ *?\(\ *?PGCHARBASE\ *?\)","dec($00$+ath(stbl(""!PGCHARBASE"")))") 
+REM 
+REM rem replace FINPUT by call 
+REM if z!.contains("FINPUT") z! = StringReplace.replaceFInput(z!) endif 
+REM rem remove END from REMOVE!
+REM if z!.contains("REMOVE") then z!=StringReplace.removeENDInStatement(z!,"REMOVE") endif 
+REM 
+REM rem replace open mode? mode shell with open on | 
+REM REM z! = z!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
+REM z! = z!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
+REM 
+REM 
+REM rem raplce ALL """" 
+REM z! = StringReplace.replaceAll(z!) 
+REM 
+REM rem replace insert array 
+REM z! = StringReplace.replaceArray(z!,"INSERT")
+REM rem replace delete array 
+REM z! = StringReplace.replaceArray(z!,"DELETE") 
+REM 
+REM rem replace like with TB.LIKE 
+REM z! = StringReplace.replaceLike(z!)
+REM 
+REM rem replace WindowShape 
+REM z! = StringReplace.replaceWindowShape(z!) 
+REM 
+REM 
+REM 
+REM rem replace SYSTEM with scall 
+REM if z!.matches(".*\bSYSTEM\b.*") then z! = StringReplace.replaceSystem(z!) endif
+REM 
+REM rem replace ADDSORT 
+REM if z!.contains("ADDSORT") then z!=StringReplace.replaceAddSort(z!) endif 
+REM rem replace REMSORT 
+REM if z!.contains("REMSORT") then z!=StringReplace.replaceRemSort(z!) endif 
+REM rem replace RENAME 
+REM if z!.contains("RENAME") then z!=StringReplace.replaceRename(z!) endif 
+REM 
+REM rem replace GETSCREEN
+REM if z!.matches(".*WIN\?\(GET\ *?SCREEN\).*") then 
+REM     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?SCREEN\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETSCREEN"",$2$4")
+REM endif 
+REM 
+REM rem replace GET ROW 
+REM if z!.matches(".*?WIN\?\(GET\ *?ROW\ *?\,.*") then 
+REM     z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?ROW\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETROW"",$4$5")
+REM endif 
+REM 
+REM rem replace GET CHAR 
+REM if z!.matches(".*?WIN\?\(GET\ *?CHAR\ *?\,.*") then 
+REM     z!= z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CHAR\ *?\,(.*?)\)?)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCHAR"",$4$5")
+REM endif 
+REM 
+REM rem replace WIN GET 
+REM if z!.matches(".*?WIN\?\(GET\ *?\).*") then 
+REM     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GET"",$2$4")
+REM endif  
+REM 
+REM rem repalce WINDOW PUT COLOR 
+REM if z!.matches(".*?WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\).*") then 
+REM     z!=z!.replaceAll("WINDOW\ *?PUT\ *?COLOR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCOLOR"",$1$2")
+REM endif 
+REM 
+REM rem replace WINDOW PUT
+REM if z!.matches(".*?WINDOW\ *?PUT\ *?\((.*?)\).*") then 
+REM     z!=z!.replaceAll("WINDOW\ *?PUT\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUT"",$1$2")
+REM endif 
+REM 
+REM rem repalce WINDOW PUT ATTR CHAR 
+REM if z!.matches(".*?WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\).*") then 
+REM     z!=z!.replaceAll("WINDOW\ *?PUT\ *?ATTR\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTATTR"",$1$2")
+REM endif 
+REM 
+REM rem repalce WINDOW PUT CHAR 
+REM if z!.matches(".*?WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\).*") then 
+REM     z!=z!.replaceAll("WINDOW\ *?PUT\ *?CHAR\ *?\((.*?)\)(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""PUTCHAR"",$1$2")
+REM endif 
+REM 
+REM rem replace get CURSOR PHY 
+REM if z!.matches(".*?WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\).*") then 
+REM     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\?\(GET\ *?CURSOR\ *?\,\ *?PHYSICAL\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSORPHYSICAL"",$2$4")                                   
+REM endif 
+REM 
+REM rem replace get CURSOR  
+REM if z!.matches(".*?WIN\(GET\ *?CURSOR\ *?\).*") then 
+REM     z! = z!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\(GET\ *?CURSOR\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSOR"",$2$4")                                   
+REM endif 
+REM 
+REM REM make sure there is a , after print ATTR
+REM z! = z!.replaceAll("(PRINT\ *?'ATTR'\ *?\(.*?\))(?!\,)(.*?)(\;|$)","$1,$2$3") 
+REM 
+REM rem replace close(0) 
+REM z! = z!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
+REM 
+REM rem replace DEV 
+REM z! = z!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+\$0D\$$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
+REM 
+REM rem can use opt as variable replace mode?= by opt= 
+REM z! = z!.replaceAll("MODE\?\=","OPT\=") 
+REM 
+REM rem replace DSK system var but not in REPDSK method 
+REM z! = z!.replaceAll("(?<=\=\ )(DSK)(?=(?:(?:[^""]*""){2})*[^""]*$)","TB.REPDSK(DSK)") 
+REM 
+REM REM REPLACE WINDOW 
+REM rem replace WIN GET LIST 
+REM z! = StringReplace.replaceWinGet(z!) 
+REM rem replace WIN GET INFO 
+REM z! = StringReplace.replaceWinGetInfo(z!) 
+REM 
+REM REM replace WINDOW DELETE 
+REM z! = z!.replaceAll("(?i)WINDOW\ *?DELETE\ *?\((ALL)\)","CALL ""DB%WIN"",""DELETE"",""$1""")
+REM z! = z!.replaceAll("WINDOW\ *?DELETE\ *?\((.*?)\)","CALL ""DB%WIN"",""DELETE"",$1")
+REM 
+REM rem replace String DSK 
+REM if z!.matches(".*?\bSTRING\b.*?") then z! = z!.replaceAll("(STRING\ *?)(\w+.*?)\,(.*?)(\,0)","$1 TB.REPDSK\($3\)+$2") endif
+REM 
+REM rem replace param
+REM z! = z!.replaceAll("ARGV\(ARGC-1\)","STBL\(""!IPL"",ERR=\*next\)")  
+REM z! = z!.replaceAll("ARGV\(2\)","STBL\(""!IPL"",ERR=\*next\)") 
+REM 
+REM rem replace SEP by SEP$ 
+REM z! =z!.replaceAll("\bSEP\b(?!\$)","SEP\$") 
+REM 
+REM rem remove err in START 
+REM z!=z!.replaceAll("(START\ *?\d{1,})(,ERR=\d{4,}\,)","$1,")  
+REM 
+REM rem replace RELEASE another session killSEssion 
+REM z! = z!.replaceAll("(RELEASE\ *?)(\w.*?)(\;|$)","TB.killSession($2)$3") 
+REM 
+REM rem raplce IFF47
+REM rem z!=StringReplace.replaceIFF47(z!)
+REM 
+REM REM rem handle num with NTP and SIZ
+REM REM z! = z!.replaceAll("(LET.*?)(\,NTP\=0\,SIZ\=\.01\))","_precision=tcb(14);PRECISION 2;$1\);PRECISION _precision")
+REM 
+REM z! = StringReplace.replaceCallTailingSpaces(z!)
+REM REM replace DOM -> ERR in call 
+REM z! = z!.replaceAll("(CALL\ *?.*?\,)DOM\=","$1ERR=")  
+REM 
+REM z! = StringReplace.replaceCVT(z!)
+REM 
+REM z! = z!.replaceAll("REM\ """"","REM """)
+REM 
+REM z$=z!
+REM exit 
+REM 
+REM 
+REM 
+REM replaceVKEYEDDIRECT: 
+REM     enter z$,filetype$
+REM 
+REM     beginLine$=z$(1,pos(filetype$=z$)-1)
+REM     if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
+REM        endLine$="" 
+REM         if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
+REM         if pos(filetype$=createString$)=0 then exit 
+REM         createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
+REM         beginVar=pos(filetype$=createString$)+len(filetype$) 
+REM         endVar = pos(","=createString$)-beginVar
+REM         file$=createString$(beginVar,endVar)
+REM         beginVar=pos(","=createString$,1,1)+1
+REM         endVar=pos(","=createString$,1,2)-beginVar 
+REM         keyChainString$=createString$(beginVar,endVar)
+REM 
+REM                 if pos(":["=keyChainString$)>0 then 
+REM           beginVar=1
+REM           endVar = pos(":["=keyChainString$,1,1)-beginVar
+REM           keyName$=keyChainString$(beginVar,endVar)                
+REM           beginVar=pos(":["=keyChainString$)+1
+REM           keyChain$=keyChainString$(beginVar)
+REM         else 
+REM           keyName$="" 
+REM           keyChain$=keyChainString$
+REM         endif 
+REM 
+REM         nbrec=0
+REM         beginVar=pos(","=createString$,1,3)+1
+REM         endVar = pos(","=createString$,1,4)-beginVar
+REM         reclen$=createString$(beginVar,endVar) 
+REM 
+REM         beginVar=pos(","=createString$,1,4)+1
+REM         tmp$=createString$(beginVar)
+REM         ok=1
+REM         posChar=0
+REM         for i=1 to len(tmp$)
+REM             if tmp$(i,1)="(" then ok=0;continue 
+REM             if tmp$(i,1)=")" then ok=1;continue 
+REM             if ok and tmp$(i,1)="," then posChar=i;break
+REM         next i 
+REM 
+REM         dsknum$=createString$(beginVar,poschar-1)
+REM         endVar=poschar
+REM        
+REM 
+REM         errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
+REM         if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+REM               errExit$=""
+REM           endif  
+REM         VNOERR:
+REM         if keyName$>"" then 
+REM             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
+REM         else 
+REM             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
+REM             if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
+REM         endif 
+REM         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
+REM         z$=beginLine$+createString$+endline$
+REM exit 
+REM 
+REM 
+REM replaceINDEXEDSORT: 
+REM     enter z$,filetype$
+REM     beginLine$=z$(1,pos(filetype$=z$)-1)
+REM     if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
+REM        endLine$="" 
+REM         if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
+REM         if pos(filetype$=createString$)=0 then exit 
+REM         createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
+REM         beginVar=pos(filetype$=createString$)+len(filetype$) 
+REM         endVar = pos(","=createString$)-beginVar
+REM         file$=createString$(beginVar,endVar)
+REM 
+REM         beginVar=pos(","=createString$,1,1)+1
+REM         endVar=pos(","=createString$,1,2)-beginVar 
+REM         keyChain$=createString$(beginVar,endVar)
+REM 
+REM         beginVar=pos(","=createString$,1,2)+1
+REM         endVar = pos(","=createString$,1,3)-beginVar
+REM         reclen$=createString$(beginVar,endVar) 
+REM 
+REM         beginVar=pos(","=createString$,1,3)+1
+REM         tmp$=createString$(beginVar)
+REM         ok=1
+REM         posChar=0
+REM         for i=1 to len(tmp$)
+REM             if tmp$(i,1)="(" then ok=0;continue 
+REM             if tmp$(i,1)=")" then ok=1;continue 
+REM             if ok and tmp$(i,1)="," then posChar=i;break
+REM         next i 
+REM 
+REM         dsknum$=createString$(beginVar,poschar-1)
+REM         endVar=poschar
+REM 
+REM 
+REM 
+REM           errExit$=str(createString$(pos(","=createString$,-1,1)),err=INOERR) 
+REM           if str(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+REM               errExit$=""
+REM           endif 
+REM         INOERR: 
+REM 
+REM                 if filetype$="SORT" then 
+REM         filetype$="VKEYED"
+REM             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
+REM         else 
+REM             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$+errExit$
+REM         endif 
+REM         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceINDEXEDSORT",endline$,filetype$ endif
+REM         z$=beginLine$+createString$+endline$
+REM exit
+REM 
+REM 
+REM handleFileCreate: 
+REM         enter z!
+REM         z$=z! 
+REM         
+REM         if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
+REM         if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
+REM         if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
+REM         if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif 
+REM         z!=z$
+REM exit 
+REM 
+REM 
+REM 
+REM 
+REM class public StringReplace
+REM 
+REM         method public static boolean matchesKeyword(String keyword!)
+REM         declare LinkedHashMap keyWordMap! 
+REM         keyWordMap! = new LinkedHashMap()
+REM         keyword! = keyword!.toUpperCase()
+REM 
+REM         keyWordMap!.put("FILL","") ; keyWordMap!.put("CLOSE","");keyWordMap!.put("WRITE","");keyWordMap!.put("STBL","")
+REM         keyWordMap!.put("JUL","");keyWordMap!.put("LOCK","");keyWordMap!.put("UNLOCK","");keyWordMap!.put("ERASE","")
+REM         keyWordMap!.put("TBL","");keyWordMap!.put("IF","")
+REM         keyWordMap!.put("INPUT",""); keyWordMap!.put("FINPUT",""); keyWordMap!.put("READ","") ; keyWordMap!.put("EXTRACT",""); keyWordMap!.put("PREAD","")
+REM         keyWordMap!.put("PEXTRACT",""); keyWordMap!.put("RECORD",""); keyWordMap!.put("OPEN",""); keyWordMap!.put("REMOVE",""); keyWordMap!.put("PRINT","") 
+REM         keyWordMap!.put("KEYL","");keyWordMap!.put("KEYF","");keyWordMap!.put("KEYN","");keyWordMap!.put("KEYP","")
+REM 
+REM         keyWordMap!.put("INFO","")
+REM         keyWordMap!.put("WINDOW","")
+REM         keyWordMap!.put("SHAPE","") 
+REM         keyWordMap!.put("WIN","")
+REM         keyWordMap!.put("GETINFO","")
+REM         keyWordMap!.put("SEVAL","")
+REM         keyWordMap!.put("MIN","")
+REM         keyWordMap!.put("MAX","")
+REM         keyWordMap!.put("AND","")
+REM         keyWordMap!.put("OR","")
+REM         keyWordMap!.put("COLOR","")
+REM         keyWordMap!.put("CHAR","")
+REM         keyWordMap!.put("PUT","")
+REM         keyWordMap!.put("ERRMES","")
+REM         keyWordMap!.put("POS","")
+REM         keywordMap!.put("REM","")
+REM         keywordMap!.put("WHILE","")
+REM         keywordMap!.put("DIR","")
+REM         keywordMap!.put("XOR","")
+REM 
+REM         keyWordMap!.put("ABS","") ; keyWordMap!.put("ACS","") ; keyWordMap!.put("ASC","") ; keyWordMap!.put("ASN","") ; keyWordMap!.put("ATN","") ; keyWordMap!.put("ATQ","") 
+REM         keyWordMap!.put("BSZ","") ; keyWordMap!.put("COS","") ; keyWordMap!.put("DEC","") ; keyWordMap!.put("DTN","") ; keyWordMap!.put("EPT","") ; keyWordMap!.put("ERR","")
+REM         keyWordMap!.put("EXP","") ; keyWordMap!.put("FIX","") ; keyWordMap!.put("FPT","") ; keyWordMap!.put("IND","") ; keyWordMap!.put("INT","") ; keyWordMap!.put("LEN","") 
+REM         keyWordMap!.put("LOG","") ; keyWordMap!.put("MAX","") ; keyWordMap!.put("MIN","") ; keyWordMap!.put("MOD","") ; keyWordMap!.put("NEA","") ; keyWordMap!.put("NLG","")
+REM         keyWordMap!.put("NMV","") ; keyWordMap!.put("NUM","") ; keyWordMap!.put("RND","") ; keyWordMap!.put("SGN","") ; keyWordMap!.put("SIN","") 
+REM         keyWordMap!.put("SQR","") ; keyWordMap!.put("SSZ","") ; keyWordMap!.put("STL","") ; keyWordMap!.put("TAN","") ; keyWordMap!.put("TCB","") ; keyWordMap!.put("UNT","") 
+REM         keyWordMap!.put("AND","") ; keyWordMap!.put("ARG","") ; keyWordMap!.put("ATH","") ; keyWordMap!.put("ATR","") ; keyWordMap!.put("BIN","") ; keyWordMap!.put("CGV","") 
+REM         keyWordMap!.put("CHR","") ; keyWordMap!.put("CPL","") ; keyWordMap!.put("CPP","") ; keyWordMap!.put("CRC","") ; keyWordMap!.put("CVT","") ; keyWordMap!.put("DCM","") 
+REM         keyWordMap!.put("DIM","") ; keyWordMap!.put("DSD","") ; keyWordMap!.put("DSK","") ; keyWordMap!.put("DTR","") ; keyWordMap!.put("ERM","") ; keyWordMap!.put("FID","")
+REM         keyWordMap!.put("FKY","") ; keyWordMap!.put("FMD","") ; keyWordMap!.put("FMT","") ; keyWordMap!.put("FST","") ; keyWordMap!.put("GAP","") ; keyWordMap!.put("HSH","")
+REM         keyWordMap!.put("HTA","") ; keyWordMap!.put("INF","") ; keyWordMap!.put("IOR","") ; keyWordMap!.put("KEY","") ; keyWordMap!.put("LKY","") ; keyWordMap!.put("LRC","") 
+REM         keyWordMap!.put("LST","") ; keyWordMap!.put("MNE","") ; keyWordMap!.put("NOT","") ; keyWordMap!.put("NTD","") ; keyWordMap!.put("PAD","") ; keyWordMap!.put("PCK","") 
+REM         keyWordMap!.put("PFL","") ; keyWordMap!.put("PFP","") ; keyWordMap!.put("PGM","") ; keyWordMap!.put("PKY","") ; keyWordMap!.put("PUB","") ; keyWordMap!.put("RTD","") 
+REM         keyWordMap!.put("SDX","") ; keyWordMap!.put("STR","") ; keyWordMap!.put("SWP","") ; keyWordMap!.put("TBL","") ; keyWordMap!.put("TSK","") ; keyWordMap!.put("UCM","") 
+REM         keyWordMap!.put("UPK","") ; keyWordMap!.put("WIN","") ; keyWordMap!.put("XFD","") 
+REM 
+REM 
+REM 
+REM 
+REM REM         keyWordMap!.put("","") ;
+REM REM         keyWordMap!.put("","") ;
+REM REM         keyWordMap!.put("","") ;
+REM REM         keyWordMap!.put("","") ;
+REM REM         keyWordMap!.put("","") ;
+REM 
+REM                 if keyWordMap!.containsKey(keyword!.trim()) then methodret bbjapi().TRUE endif 
+REM 
+REM                    methodret bbjapi().FALSE
+REM     methodend 
+REM 
+REM         rem  replace global vars like ]USER$ -> ENV_USER$   
+REM     method public static String replaceENV(String z!)  
+REM         z!=z!.replaceAll("\](?=\b\w+)\b","_")    
+REM         REM replace QUO WITH """ 
+REM         z!=z!.replaceAll("(?<=\+)QUO|QUO(?=\+)|(?<=\+)QUO(?=\+)","""") 
+REM         methodret z!
+REM     methodend
+REM 
+REM 
+REM     REM /* 
+REM     REM / replaces round brackets by [] for 
+REM     REM */
+REM     method public static String replaceRoundBrackets(String z!) 
+REM         seterr replaceBracketsError
+REM         declare Pattern p! 
+REM         seterr 0
+REM REM     p! = Pattern.compile("\w+(\ *\()")
+REM         p! = Pattern.compile("(\w+\ *?\()(?=(?:(?:[^""]*""){2})*[^""]*$)")
+REM        rem  \b\w+\ *?(\()(?=(?:(?:(?:[^""\\]++|\\.)*+""){2})*+(?:[^""\\]++|\\.)*+$)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM         declare String keyword! 
+REM         while m!.find() 
+REM         keyword! = m!.group(0)
+REM         keyword! = keyword!.substring(0,keyword!.length()-1).trim()  
+REM         rem check for methods 
+REM         if m!.start()>0 then if z!.substring(m!.start()-1,m!.start())="." then continue endif endif
+REM         rem check for templates 
+REM         if m!.start()>0 then if z!.substring(m!.start()-1,m!.start())=":" then continue endif endif
+REM 
+REM         rem check for custom functions 
+REM         if keyword!.startsWith("FN") then continue endif 
+REM         rem except for ARGV
+REM         if keyword!.startsWith("ARGV") then continue endif 
+REM         if StringReplace.matchesKeyword(keyword!) then continue endif 
+REM REM         System.out.println("word:"+m!.toString())        
+REM         posClosingBracket=z!.indexOf(")",m!.start());if posClosingBracket=-1 then methodret z! endif 
+REM         rem don't convert it String does not contain closing bracket 
+REM         if closingBracket=-1 then methodret z! endif 
+REM         if posClosingBracket=z!.length() then endline=z!.length() else endline=posClosingBracket+1 endif
+REM         posBracket = z!.indexOf("(",m!.start())
+REM 
+REM                 rem check for openning brackets between the opening and the first closing one 
+REM         noOpeningBrackets = StringUtils.countMatches(z!.substring(posBracket,posClosingBracket),"(")  
+REM 
+REM         if noOpeningBrackets>0 then 
+REM             tmp$=z!.substring(m!.start()) 
+REM             posClosingBracket=m!.start()+pos(")"=tmp$,1,noOpeningBrackets)-1
+REM         endif            
+REM 
+REM            z! = z!.substring(0,m!.start())+keyword!+"["+z!.substring(posBracket+1,posClosingBracket)+"]"+z!.substring(posClosingBracket+1)
+REM         wend
+REM         methodret z!
+REM         replaceBracketsError: 
+REM           if pos("StringIndexOutOfBoundsException"=errmes(-1)) >0 then System.out.println(z!);methodret z! 
+REM     methodend 
+REM 
+REM    method public static String removeENDInStatement(String z!,String keyword!) 
+REM       if ! z!.contains(keyword!) then methodret z! 
+REM 
+REM       beginVar = z!.indexOf(keyword!)
+REM       endVar = z!.indexOf(")",beginVar)
+REM       beginLine! = z!.substring(0,beginVar)
+REM       sok=0 
+REM       endline! = z!.substring(endVar,err=*next);sok=1
+REM       if ! sok then methodret z! endif
+REM       statement! = z!.substring(beginVar,endVar) 
+REM 
+REM       beginEnd=statement!.indexOf("END=") 
+REM       if beginEnd=-1 then methodret z! endif 
+REM       if statement!.indexOf(",",beginEnd)=-1 then 
+REM         statement! = statement!.substring(0,beginEnd-1)
+REM       else 
+REM         statement! = statement!.substring(0,beginEnd)+statement!.substring(statement!.indexOf(",",beginEnd)+1) 
+REM       endif
+REM       if endline!.contains(keyword!) then endline!=#removeENDInStatement(endline!,keyword!) 
+REM       z!=beginLine!+statement!+endline!
+REM 
+REM       methodret z!
+REM     methodend 
+REM 
+REM    
+REM 
+REM     REM /*
+REM     REM *
+REM     REM *  replace string = INSERT ARRAY call "TBUTILS.bbj::INSERTARRAY",ARRAY[ALL],options
+REM     REM * 
+REM     REM */ 
+REM     method public static String replaceArray(String z!,String function!) 
+REM         seterr replaceArrayError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("((?i)"+function!+"\ ARRAY\ ?(.*?))\[\((.*?)(\)\])(\;|$)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(4))
+REM             arrayname$=m!.group(2)
+REM             arrayType$="N"
+REM             if arrayname$(len(arrayname$),1)="$" then arrayType$="S" endif
+REM REM             dim x![1]
+REM             tmp$ = m!.group(3) 
+REM REM             tmp! = tmp!.replaceAll("\,((.)(?<!\()(?!\)))",",$1$1")
+REM REM             x![]=tmp!.split("\,(.(?<!\()(?!\)))")
+REM             ok=1
+REM             posChar=0
+REM             for i=1 to len(tmp$)
+REM                 if tmp$(i,1)="(" then ok=0;continue 
+REM                 if tmp$(i,1)=")" then ok=1;continue 
+REM                 if ok and tmp$(i,1)="," then posChar=i;break
+REM             next i 
+REM             newLine! = newLine!+beginLine!+" call ""DB%"+arrayType$+"ARRAY"","""+function!+""","+arrayname$+"[ALL],"+tmp$(1,i-1)+","+tmp$(i+1)
+REM             startLine=m!.end(4)
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceArrayError: 
+REM     rem donoting         
+REM     methodret z! 
+REM     methodend 
+REM 
+REM     REM /*
+REM     REM *
+REM     REM *  replace like
+REM     REM * 
+REM     REM */ 
+REM     method public static String replaceLike(String z!) 
+REM         seterr replaceLikeError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)\ ((?i)LIKE\ ?)(.*?)(\=0|\bTHEN\b|\bAND\b|\bOR\b)")       
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM                 while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(3))
+REM             newLine! = newLine!+beginLine!+" TB.LIKE("+m!.group(1).trim()+","+m!.group(3).trim()+") "
+REM             startLine=m!.end(3)
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM REM             System.out.println(z!)
+REM             methodret newLine!
+REM     replaceLikeError: 
+REM     rem donoting         
+REM     methodret z! 
+REM     methodend 
+REM 
+REM     rem /* 
+REM     rem * replace WINDOW SHAPE (LINE,HORIZONTAL,0,1,33) ""BORDERATR=BG"""
+REM     rem * CALL "DB%WINSHAP","LINE",0,0,1,33,"BORDERATR=BG"
+REM     rem * only works with one occurrence per line 
+REM     rem */
+REM     method public static String replaceWindowShape(String z!) 
+REM         seterr replaceWindowShapeError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(WINDOW\ *SHAPE)\ *\((.*)\,(.*)\,(.*)\,(.*)\,(.*)\)(.*)")
+REM 
+REM                 declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM                 while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(7))
+REM             HV=-1
+REM             if m!.group(3)="HORIZONTAL" then HV=0 endif 
+REM             if m!.group(3)="VERTICAL" then HV=1 endif
+REM             if HV=-1 then 
+REM                 newLine! = newLine!+beginLine!+" CALL ""DB%WINSHAP"","+m!.group(2)+","+m!.group(4)+","+m!.group(5)+","+m!.group(6)+","+m!.group(7)
+REM             else 
+REM                 newLine! = newLine!+beginLine!+" CALL ""DB%WINSHAP"","+m!.group(2)+","+str(hv)+","+m!.group(5)+","+m!.group(6)+","+m!.group(7)
+REM             endif
+REM             startLine=m!.end(3)
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM REM             System.out.println(z!)
+REM             methodret newLine!
+REM     replaceWindowShapeError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM     method public static String replaceFInput(String z!) 
+REM         seterr replaceFInputError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         if !z!.contains("FINPUT") then methodret z! endif 
+REM         p! = Pattern.compile("(?:(EDT\=.*?)(\,|\))|(TIM\=.*?)(\,|\))|(ERR\=\d.*)(\,|\)))")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         declare LinkedHashMap map! 
+REM         map! = new LinkedHashMap()
+REM         declare String tmp!
+REM         tmp! = new String("")  
+REM         while m!.find() 
+REM               tmp! = m!.group(0) 
+REM               map!.put(tmp!.substring(0,tmp!.indexOf("=")),tmp!.substring(tmp!.indexOf("=")+1,tmp!.length()-1))         
+REM         wend
+REM               newLine! = "CALL ""DB%FINPUT"","+"ERR="+str(map!.get("ERR"))+",COLN,LIGN,LONG_AFF,LONG_SAI,"
+REM               if map!.containsKey("TIM") then 
+REM                 newLine! = newLine!+map!.get("TIM")+","
+REM               else 
+REM                 newLine! = newLine!+"0,"
+REM               endif
+REM               if map!.containsKey("EDT") then 
+REM                 newLine! = newLine!+map!.get("EDT")+","
+REM               else 
+REM                 newLine! = newLine!+""""","
+REM               endif              
+REM               newLine! = newLine!+"E$,FCT" 
+REM         methodret newLine!
+REM     replaceFInputError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM     rem * 
+REM     rem * replace ADDSORT
+REM     rem */
+REM     method public static String replaceAddSort(String z!) 
+REM         seterr replaceADDSORTError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(ADDSORT)\ (.*?)\,(.*?)\:(.*?)\,([\w\.\$\(\)\[\]\=\d\,\*\""\?\|\&\@\\\_\/\:\-\+]+)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = ""
+REM             keyString!=m!.group(4) 
+REM             keyString! = keyString!.replaceAll("""","""""")            
+REM             newLine! = newLine!+beginLine!+"TB.ADDSORT(TB.REPDSK("+m!.group(5)+")+"+m!.group(2)+","+m!.group(3)+","""+keyString!+""")"
+REM             if z!.substring(m!.end(5)).indexOf(";")>-1 then endLine=m!.end(5) endif 
+REM             startline=m!.end(5)
+REM             wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             if endline>0 then endline! = z!.substring(endline) endif
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceADDSORTError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM            rem * 
+REM     rem * replace REMSORT
+REM     rem */
+REM     method public static String replaceRemSort(String z!) 
+REM         seterr replaceREMSORTError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(REMSORT)\ (.*?)\,(?:KNUM\=)([\w\.\$\(\)\[\]\=\d\*\""\,\?\|\&\@\\\_\/\:\-\+]+)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM                 while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = ""
+REM             newLine! = newLine!+beginLine!+"TB.REMSORT("+m!.group(2)+","+m!.group(3)+")"
+REM             if z!.length()>=m!.end(3) then endline=m!.end(3) endif 
+REM             startline=m!.end(3)
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             if endline>0 then endline! = z!.substring(endline) endif
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceREMSORTError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM 
+REM           rem * 
+REM     rem * replace rename
+REM     rem */
+REM     method public static String replaceRename(String z!) 
+REM         seterr replaceRenameError
+REM         declare String newLine! 
+REM         m_error$=CPL(z!,err=*next);methodret z! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(RENAME)\ (.*?)(?:\;|$)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM              declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         declare BBjVector vec! 
+REM         vec! = bbjapi().makeVector()
+REM 
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = ""
+REM 
+REM             vec! = #splitExpression(m!.group(2)) 
+REM             newLine! = newLine!+beginLine!+"RENAME TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(1))+",TB.REPDSK("+str(vec!.getItem(0))+")+"+str(vec!.getItem(2))
+REM             if z!.length()>=m!.end(2) then endline=m!.end(2) endif 
+REM             startline=m!.end(2)
+REM         wend
+REM rem             if newLine!.isEmpty() then methodret z! endif 
+REM             if endline>0 then endline! = z!.substring(endline) endif
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceRenameError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM 
+REM         method public static String replaceSystem(String z!) 
+REM         seterr replaceSystem
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(SYSTEM)\ (.*?)(\;|$)(?=(?:(?:[^""]*""){2})*[^""]*$)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM                 declare BBjVector vec! 
+REM         vec! = bbjapi().makeVector()
+REM 
+REM                 while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = ""                           
+REM             newLine! = newLine!+beginLine!+"dummy=scall("+m!.group(2)+")"
+REM             if z!.length()>=m!.end(2) then endline=m!.end(2) endif 
+REM             startline=m!.end(2)
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             if endline>0 then endline! = z!.substring(endline) endif
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceSystem: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM     rem replace WIN
+REM 
+REM      method public static String replaceWinGet(String z!) 
+REM         seterr replaceWinGetError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("([LET\ ]*?\w+?\$)\ *?\=\ *?(WIN\?\ *?\(GET\ LIST\))")
+REM 
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(2))
+REM             wlst$=m!.group(1).replaceAll("LET","") 
+REM             newLine! = beginLine!   +"CALL ""DB%WIN"",""GETLIST"","+wlst$
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceWinGetError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM         method public static String replaceWinGetInfo(String z!) 
+REM         seterr replaceWinGetInfoError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(WINDOW\ GETINFO\ *?)\((.*?)\)(.*?)(?:\;|$)")
+REM 
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(3))
+REM             expr$=m!.group(2)
+REM             if ! m!.group(3).trim().isEmpty() then 
+REM                 expr$=m!.group(3)+","+expr$
+REM             endif
+REM             newLine! = beginLine!   +"CALL ""DB%WIN"",""GETINFO"","+expr$
+REM         wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceWinGetInfoError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM 
+REM REM /*
+REM     REM *
+REM     REM *  replace string = IFF47 String$(x,y)="t" LEN(A$)>=50 AND A$(50,1)="t" TB.ALLBBJ(string,compareString)
+REM     REM * 
+REM     REM */ 
+REM     method public static String replaceIFF47(String z!) 
+REM         seterr replaceIFF47Error
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare String returnLine!
+REM         returnLine! = new String("")
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(?:\bIF\b)(.*?)(?:\bTHEN\b)")
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM         declare String statement!
+REM         statement! = "" 
+REM 
+REM                 while m!.find() 
+REM             statement! = m!.group(1)
+REM             declare Pattern p1!     
+REM             p1! = Pattern.compile("(\w+?\$\ *?\(.*?)(\bAND\b|\bOR\b|$)")
+REM             declare Matcher m1!      
+REM             m1! = p1!.matcher(statement!)
+REM             declare String myStatement!
+REM             myStatement! = ""
+REM             beginZ! = z!.substring(startLine,m!.start(1))
+REM             endZ! = z!.substring(m!.end(1))
+REM             startLine=0
+REM 
+REM             declare String lenExp!
+REM 
+REM                 while m1!.find()         
+REM                 beginLine! = statement!.substring(startLine,m1!.start(1))
+REM                 endline! = statement!.substring(m1!.end(1))
+REM                 st1! = m1!.group(1)   
+REM                 var! = st1!.replaceAll(".*?(\w+\$).*","$1")                                 
+REM 
+REM                 rem find expression in () 
+REM                 content!=st1!.substring(st1!.indexOf(var!)+var!.length()) 
+REM                 posMatch=#findMatchingBracket(content!) 
+REM                 if posMatch=-1 then methodret z! endif 
+REM 
+REM                 content!=content!.substring(1,posMatch-1)
+REM 
+REM                                 vec! = #splitExpression(content!) 
+REM 
+REM                                 lenExp! = new String("")
+REM                 for i=0 to vec!.size()-1 
+REM                     lenExp! = lenExp!+vec!.getItem(i)+"+"
+REM                 next i  
+REM                 lenExp! = lenExp!.substring(0,lenExp!.length()-1) 
+REM 
+REM                 myStatement! = " (LEN("+var!+")>="+lenExp!+" AND "+st1!+" ) "
+REM 
+REM                 newLine! = newLine!+beginLine!+myStatement!
+REM                 startLine=m1!.end(1)
+REM               wend    
+REM 
+REM                              returnLine! = returnLine!+beginZ!+newLine!+endLine!
+REM               newLine!="" 
+REM               startLine=m!.end(1)
+REM         wend
+REM 
+REM             if returnLine!.isEmpty() then methodret z! endif 
+REM             returnLine!=returnLine!+endZ!
+REM             methodret returnLine!
+REM     replaceIFF47Error: 
+REM     rem donoting         
+REM     methodret z! 
+REM     methodend 
+REM 
+REM     method private static BBjNumber findMatchingBracket(String exp!) 
+REM         exp$=exp! 
+REM         if pos(")"=exp$)>0 then
+REM             tmp$=exp$(1,pos(")"=exp$))
+REM             anz=pos("("=tmp$,1,0)
+REM             methodret pos(")"=exp$,1,anz) 
+REM         endif 
+REM         methodret -1
+REM     methodend 
+REM 
+REM      method private static BBjVector splitExpression(String exp!) 
+REM         declare BBjVector vec! 
+REM         vec! = bbjapi().makeVector()
+REM         declare String tmp!  
+REM         tmp! = exp! 
+REM         ok=0
+REM         startExp=0
+REM         for i=0 to tmp!.length()-1 
+REM             tmp$=tmp!.substring(i,i+1) 
+REM             if tmp$="(" then ok=ok+1;continue endif 
+REM             if tmp$=")" then ok=ok-1;continue endif
+REM             if tmp$="," and ok=0 then
+REM              posChar=i
+REM              vec!.add(tmp!.substring(startExp,posChar))
+REM              startExp=posChar+1
+REM             endif  
+REM         next i 
+REM         vec!.add(tmp!.substring(startExp))
+REM         methodret vec!
+REM     methodend 
+REM 
+REM     rem replace CVT by CVS 
+REM     method public static String replaceCVT(String z!) 
+REM         seterr replaceCVTError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(TB\.CVT\()(.*?)(\>|\=|\<|\<\>|\;|$|\bOR\b|\bAND\b|\bTHEN\b|\bIF\b)")
+REM 
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM                 declare LinkedHashMap map! 
+REM         map! = new LinkedHashMap() 
+REM         map!.put("1","8") 
+REM         map!.put("2","128") 
+REM         map!.put("4","32") 
+REM         map!.put("8","4096")  
+REM         map!.put("16","4") 
+REM         map!.put("32","16") 
+REM         map!.put("128","2")                
+REM         declare String expr!
+REM         declare String var!
+REM         declare String cvtexpr!
+REM         declare BBjVector vec!
+REM 
+REM                 while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(3))
+REM             content!=m!.group(2)
+REM             expr!=""
+REM             vec!=#splitExpression(content!)
+REM 
+REM                         var! = vec!.getItem(0).toString()
+REM             expr! = vec!.getItem(1).toString()
+REM             expr! = expr!.substring(0,expr!.length()-1)
+REM             ok=1 
+REM 
+REM                         dim exprT![1]
+REM 
+REM                                     if expr!.contains("+") then 
+REM                 exprT![]=expr!.split("\+") 
+REM                 exprT!=expr!.split("\+") 
+REM                 lenExpr=Array.getLength(exprT!) 
+REM             else 
+REM                 exprT![0]=expr!
+REM                 lenExpr=1 
+REM             endif 
+REM             cvtexpr! = ""
+REM 
+REM                         for i=0 to lenExpr-1
+REM                 if map!.containsKey(exprT![i]) then 
+REM                     cvtexpr!=cvtexpr!+map!.get(exprT![i])+"+" 
+REM                 else 
+REM                     ok=0 
+REM                     break
+REM                 endif 
+REM             next i 
+REM 
+REM                         if ok then 
+REM                 cvtexpr!=cvtexpr!.substring(0,cvtexpr!.length()-1)
+REM                 newLine! = newLine!+beginLine!+"CVS("+var!+","+cvtexpr!+")"+m!.group(m!.groupCount())
+REM                 startLine=m!.end(m!.groupCount())
+REM             else 
+REM                 newLine! = newLine!+beginLine!+m!.group()     
+REM                 startLine=m!.end()
+REM             endif 
+REM 
+REM                     wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceCVTError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM 
+REM      rem replace CVT by CVS 
+REM     method public static String replaceCallTailingSpaces(String z!) 
+REM         seterr replaceCallTailingSpacesError
+REM         declare String newLine! 
+REM         newLine! = new String("") 
+REM         declare Pattern p!     
+REM         p! = Pattern.compile("(CALL\ *?)(\"".*?\"")(?:\bOR\b|\bAND\b|\bTHEN\b|\bIF\b|\,|\;|$)")
+REM 
+REM         declare Matcher m!
+REM         m! = p!.matcher(z!)
+REM 
+REM         declare String beginLine!
+REM         declare String endLine!  
+REM         beginLine! = new String("") 
+REM         endLine! = new String("") 
+REM         startLine=0
+REM 
+REM         while m!.find() 
+REM             beginLine! = z!.substring(startLine,m!.start(1))
+REM             endline! = z!.substring(m!.end(2))
+REM             expr$=m!.group(2)
+REM             expr$=expr$(2,len(expr$)-2)
+REM             lenexpr=len(expr$) 
+REM             expr$=cvs(expr$,2)
+REM             lenblank=lenexpr-len(expr$)
+REM             newLine! = newLine!+beginLine!+"CALL """+expr$+""""+fill(lenblank," ")
+REM             startLine=m!.end(2)
+REM 
+REM                     wend
+REM             if newLine!.isEmpty() then methodret z! endif 
+REM             newLine!=newLine!+endLine!
+REM             methodret newLine!
+REM     replaceCallTailingSpacesError: 
+REM     rem donoting         
+REM     methodret z!     
+REM     methodend 
+REM 
+REM 
+REM 
+REM     classend 
 
 
 REM TODO: exemple :LET C4=UNT; OPEN (C4,OPT="SOCKET",ERR=09900) "127.0.0.1:"+PORT$

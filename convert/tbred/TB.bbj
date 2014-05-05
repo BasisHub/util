@@ -27,10 +27,12 @@ class public TB
 	WHILE (i < LEN(LCAN$) )
 		canalt=DEC($00$+lcan$(i,2))
 		if canalt > 0 then
-			fichier0$ = cvs(FID(canalt)(9),2)
-			if (fichier$ = fichier0$) then
-				canal=canalt
-				break
+			if (LEN(FID(canalt)) >= 9 ) then
+				fichier0$ = cvs(FID(canalt)(9),2)
+				if (fichier$ = fichier0$) then
+					canal=canalt
+					break
+				fi
 			fi
 		fi
 		i=i+2
@@ -270,9 +272,11 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         if AND(valore$,bin(1,8))>comp$
             let stringa$=tbl(stringa$,$7F$)
         endif 
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(2,8))>comp$
             stringa$=cvs(stringa$,144)  
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(4,8))>comp$
             if len(stringa$)=0 then
                 valore=valore-4
@@ -282,15 +286,19 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
                 stringa$=stringa$(1,PP-1)+stringa$(PP+1)
             wend  
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(8,8))>comp$
             let stringa$=cvs(stringa$,1)
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(16,8))>comp$
             let stringa$=cvs(stringa$,32)
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(32,8))>comp$
             let stringa$=cvs(stringa$,4)
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(64,8))>comp$
             if len(stringa$)=0 then
                 valore=valore-64
@@ -304,14 +312,18 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
             fi
             next x    
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(128,8))>comp$
             let stringa$=cvs(stringa$,2)    
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(256,8))>comp$    
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(512,8))>comp$
             let stringa$=swap(stringa$,$02$)         
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(1024,8))>comp$
             if len(stringa$)=0 then
                 valore=valore-1024
@@ -325,12 +337,15 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
             let stringa$=temp$
             valore=valore-1024
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(2048,8))>comp$
             let stringa$=tbl(stringa$,$7F$)     
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(4096,8))>comp$
             let stringa$=cvs(stringa$,8)            
         endif
+        if stringa$="" then methodret stringa$ endif 
         if AND(valore$,bin(8192,8))>comp$
             let stringa$=swap(stringa$,$08$)            
         endif
@@ -482,6 +497,9 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
           fid_tbd$=fid_tbd$+str(filename$(7),err=*next)         
         endif 
         FIDJ_exit:
+	if  len(fid_tbd$)>3 AND len(fid_tbd$)<22
+		fid_tbd$=PAD(fid_tbd$,22," ")
+	fi
         methodret fid_tbd$
 
         FIDJ_err:

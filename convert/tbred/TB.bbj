@@ -1252,13 +1252,19 @@ REM         info!.setKeyName(0,newKeyName$)
 
                         if pos("Change:"=tmpFileInfo$,1,1)>0 then 
                 changed$=tmpFileInfo$(9,20) 
-                fst$(37,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                fst$(37,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS")*10000,0),6)
                 continue 
             endif 
 
                         if pos("Access:"=tmpFileInfo$,1,1)>0 and pos("Uid:"=tmpFileInfo$,1,1)=0 then 
                 changed$=tmpFileInfo$(9,20) 
-                fst$(43,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS"),0))
+                fst$(43,6)=bin(round(TB.DTN(changed$,"YYYY-MM-DD HH:MI:SS")*10000,0),6)
+                continue 
+            endif 
+
+                        if pos("Modify:"=tmpFileInfo$,1,1)>0 then 
+                modify$=tmpFileInfo$(9,20) 
+                fst$(49,6)=bin(round(TB.DTN(modify$,"YYYY-MM-DD HH:MI:SS")*10000,0),6)
                 continue 
             endif 
 

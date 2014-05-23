@@ -672,6 +672,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         rem map [?] to \?
         rem map [*] to \*
         rem map [[] to \[
+        rem map $  to \$
         rem replace * par .*
         rem */ 
         b! = b!.replaceAll("\\","\\\\")
@@ -684,6 +685,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
         b! = b!.replaceAll("\)","\\\)")
         b! = b!.replaceAll("\{","\\{") 
         b! = b!.replaceAll("\}","\\}") 
+        b! = b!.replaceAll("\x24","\\x24") 
         methodret a!.matches(b!,err=*next)
         methodret BBjAPI().FALSE
     methodend 

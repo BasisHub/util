@@ -197,130 +197,130 @@ REM exit
 REM 
 REM 
 REM 
-REM replaceVKEYEDDIRECT: 
-REM     enter z$,filetype$
-REM 
-REM     beginLine$=z$(1,pos(filetype$=z$)-1)
-REM     if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
-REM        endLine$="" 
-REM         if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
-REM         if pos(filetype$=createString$)=0 then exit 
-REM         createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
-REM         beginVar=pos(filetype$=createString$)+len(filetype$) 
-REM         endVar = pos(","=createString$)-beginVar
-REM         file$=createString$(beginVar,endVar)
-REM         beginVar=pos(","=createString$,1,1)+1
-REM         endVar=pos(","=createString$,1,2)-beginVar 
-REM         keyChainString$=createString$(beginVar,endVar)
-REM 
-REM                 if pos(":["=keyChainString$)>0 then 
-REM           beginVar=1
-REM           endVar = pos(":["=keyChainString$,1,1)-beginVar
-REM           keyName$=keyChainString$(beginVar,endVar)                
-REM           beginVar=pos(":["=keyChainString$)+1
-REM           keyChain$=keyChainString$(beginVar)
-REM         else 
-REM           keyName$="" 
-REM           keyChain$=keyChainString$
-REM         endif 
-REM 
-REM         nbrec=0
-REM         beginVar=pos(","=createString$,1,3)+1
-REM         endVar = pos(","=createString$,1,4)-beginVar
-REM         reclen$=createString$(beginVar,endVar) 
-REM 
-REM         beginVar=pos(","=createString$,1,4)+1
-REM         tmp$=createString$(beginVar)
-REM         ok=1
-REM         posChar=0
-REM         for i=1 to len(tmp$)
-REM             if tmp$(i,1)="(" then ok=0;continue 
-REM             if tmp$(i,1)=")" then ok=1;continue 
-REM             if ok and tmp$(i,1)="," then posChar=i;break
-REM         next i 
-REM 
-REM         dsknum$=createString$(beginVar,poschar-1)
-REM         endVar=poschar
-REM        
-REM 
-REM         errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
-REM         if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
-REM               errExit$=""
-REM           endif  
-REM         VNOERR:
-REM         if keyName$>"" then 
-REM             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
-REM         else 
-REM             createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
-REM             if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
-REM         endif 
-REM         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
-REM         z$=beginLine$+createString$+endline$
-REM exit 
-REM 
-REM 
-REM replaceINDEXEDSORT: 
-REM     enter z$,filetype$
-REM     beginLine$=z$(1,pos(filetype$=z$)-1)
-REM     if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
-REM        endLine$="" 
-REM         if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
-REM         if pos(filetype$=createString$)=0 then exit 
-REM         createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
-REM         beginVar=pos(filetype$=createString$)+len(filetype$) 
-REM         endVar = pos(","=createString$)-beginVar
-REM         file$=createString$(beginVar,endVar)
-REM 
-REM         beginVar=pos(","=createString$,1,1)+1
-REM         endVar=pos(","=createString$,1,2)-beginVar 
-REM         keyChain$=createString$(beginVar,endVar)
-REM 
-REM         beginVar=pos(","=createString$,1,2)+1
-REM         endVar = pos(","=createString$,1,3)-beginVar
-REM         reclen$=createString$(beginVar,endVar) 
-REM 
-REM         beginVar=pos(","=createString$,1,3)+1
-REM         tmp$=createString$(beginVar)
-REM         ok=1
-REM         posChar=0
-REM         for i=1 to len(tmp$)
-REM             if tmp$(i,1)="(" then ok=0;continue 
-REM             if tmp$(i,1)=")" then ok=1;continue 
-REM             if ok and tmp$(i,1)="," then posChar=i;break
-REM         next i 
-REM 
-REM         dsknum$=createString$(beginVar,poschar-1)
-REM         endVar=poschar
-REM 
-REM 
-REM 
-REM           errExit$=str(createString$(pos(","=createString$,-1,1)),err=INOERR) 
-REM           if str(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
-REM               errExit$=""
-REM           endif 
-REM         INOERR: 
-REM 
-REM                 if filetype$="SORT" then 
-REM         filetype$="VKEYED"
-REM             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
-REM         else 
-REM             createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$+errExit$
-REM         endif 
-REM         if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceINDEXEDSORT",endline$,filetype$ endif
-REM         z$=beginLine$+createString$+endline$
-REM exit
-REM 
-REM 
-REM handleFileCreate: 
-REM         enter z!
-REM         z$=z! 
-REM         
-REM         if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
-REM         if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
-REM         if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
-REM         if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif 
-REM         z!=z$
-REM exit 
+replaceVKEYEDDIRECT: 
+    enter z$,filetype$
+
+    beginLine$=z$(1,pos(filetype$=z$)-1)
+    if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
+       endLine$="" 
+        if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
+        if pos(filetype$=createString$)=0 then exit 
+        createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
+        beginVar=pos(filetype$=createString$)+len(filetype$) 
+        endVar = pos(","=createString$)-beginVar
+        file$=createString$(beginVar,endVar)
+        beginVar=pos(","=createString$,1,1)+1
+        endVar=pos(","=createString$,1,2)-beginVar 
+        keyChainString$=createString$(beginVar,endVar)
+
+                if pos(":["=keyChainString$)>0 then 
+          beginVar=1
+          endVar = pos(":["=keyChainString$,1,1)-beginVar
+          keyName$=keyChainString$(beginVar,endVar)                
+          beginVar=pos(":["=keyChainString$)+1
+          keyChain$=keyChainString$(beginVar)
+        else 
+          keyName$="" 
+          keyChain$=keyChainString$
+        endif 
+
+        nbrec=0
+        beginVar=pos(","=createString$,1,3)+1
+        endVar = pos(","=createString$,1,4)-beginVar
+        reclen$=createString$(beginVar,endVar) 
+
+        beginVar=pos(","=createString$,1,4)+1
+        tmp$=createString$(beginVar)
+        ok=1
+        posChar=0
+        for i=1 to len(tmp$)
+            if tmp$(i,1)="(" then ok=0;continue 
+            if tmp$(i,1)=")" then ok=1;continue 
+            if ok and tmp$(i,1)="," then posChar=i;break
+        next i 
+
+        dsknum$=createString$(beginVar,poschar-1)
+        endVar=poschar
+       
+
+        errExit$=str(createString$(pos(","=createString$,-1,1)),err=VNOERR)
+        if STR(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+              errExit$=""
+          endif  
+        VNOERR:
+        if keyName$>"" then 
+            createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,"+keyName$+")"
+        else 
+            createString$="VKEYED TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
+            if fileType$="VKEYED" then createString$=createString$+";TB.setKeyName(TB.REPDSK("+dsknum$+")+"+file$+",0,""0"")" endif 
+        endif 
+        if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",endline$,filetype$ endif
+        z$=beginLine$+createString$+endline$
+exit 
+
+
+replaceINDEXEDSORT: 
+    enter z$,filetype$
+    beginLine$=z$(1,pos(filetype$=z$)-1)
+    if pos(filetype$=z$)=0 then exit endif;createString$=z$(pos(filetype$=z$)) 
+       endLine$="" 
+        if pos(";"=createString$)>0 then endline$=createString$(pos(";"=createString$))
+        if pos(filetype$=createString$)=0 then exit 
+        createString$=createString$(pos(filetype$=createString$),pos(";"=createString$)-pos(filetype$=createString$))
+        beginVar=pos(filetype$=createString$)+len(filetype$) 
+        endVar = pos(","=createString$)-beginVar
+        file$=createString$(beginVar,endVar)
+
+        beginVar=pos(","=createString$,1,1)+1
+        endVar=pos(","=createString$,1,2)-beginVar 
+        keyChain$=createString$(beginVar,endVar)
+
+        beginVar=pos(","=createString$,1,2)+1
+        endVar = pos(","=createString$,1,3)-beginVar
+        reclen$=createString$(beginVar,endVar) 
+
+        beginVar=pos(","=createString$,1,3)+1
+        tmp$=createString$(beginVar)
+        ok=1
+        posChar=0
+        for i=1 to len(tmp$)
+            if tmp$(i,1)="(" then ok=0;continue 
+            if tmp$(i,1)=")" then ok=1;continue 
+            if ok and tmp$(i,1)="," then posChar=i;break
+        next i 
+
+        dsknum$=createString$(beginVar,poschar-1)
+        endVar=poschar
+
+
+
+          errExit$=str(createString$(pos(","=createString$,-1,1)),err=INOERR) 
+          if str(errExit$(1,len(",ERR=")),err=*next)<>",ERR=" then 
+              errExit$=""
+          endif 
+        INOERR: 
+
+                if filetype$="SORT" then 
+        filetype$="VKEYED"
+            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+",0,"+reclen$+errExit$
+        else 
+            createString$=filetype$+" TB.REPDSK("+dsknum$+")+"+file$+","+keyChain$+","+reclen$+errExit$
+        endif 
+        if pos(filetype$+" "=endline$)>0 then call "replace.bbj::replaceINDEXEDSORT",endline$,filetype$ endif
+        z$=beginLine$+createString$+endline$
+exit
+
+declare String z!
+handleFileCreate: 
+        enter z!
+        z$=z! 
+        
+        if pos("VKEYED "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"VKEYED" endif        
+        if pos("INDEXED "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"INDEXED" endif 
+        if pos("SORT "=z$)>0 then call "replace.bbj::replaceINDEXEDSORT",z$,"SORT" endif 
+        if pos("DIRECT "=z$)>0 then call "replace.bbj::replaceVKEYEDDIRECT",z$,"DIRECT" endif 
+        z!=z$
+exit 
 REM 
 REM 
 REM 

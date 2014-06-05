@@ -45,6 +45,9 @@ class public TB
         seterr DTNJ_err
         prc=tcb(14)
         PRECISION 8
+	if len(cvs(dateval$,2))=0 then
+		goto DTNJ_err
+	fi
 
 
         let dt$=$$, mk$=$$, datemask$=cvs(datemask$,4)

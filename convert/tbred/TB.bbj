@@ -903,6 +903,29 @@ REM         info!.setKeyName(0,newKeyName$)
         methodret bbjapi().FALSE
     methodend  
 
+
+    method public static BBjString DSD(BBjString dev$) 
+	SETERR ERR_DSD
+	if #LIKE(dev$,"D?") then
+		rep$=STBL("!DSK_"+dev$)
+		rep$=rep$(1,len(rep$)-1)
+        	dim fid$(86)
+		fid$(1,2)=dev$
+		fid$(6,1)=$00$
+		fid$(23)=rep$
+	else
+        	dim fid$(72)
+        	fid$(1)=fid(0) 
+        	if dev$=fid(0) then 
+            	dev$=fid$(1,2) 
+        	endif 
+        	fid$(11,8)=stbl("!ID_TERM",err=*next)
+	endif
+        methodret fid$
+	ERR_DSD:
+	throw errmes(-1)+" in class TB at line "+str(tcb(5)),err 
+    methodend 
+
     method public static BBjString XFD(BBjNumber channel,BBjNumber func)
         dim xfd$(100) 
         declare BBjFileInfo info! 

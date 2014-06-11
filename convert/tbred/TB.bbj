@@ -907,10 +907,12 @@ REM         info!.setKeyName(0,newKeyName$)
     method public static BBjString DSD(BBjString dev$) 
 	SETERR ERR_DSD
 	if #LIKE(dev$,"D?") then
-        dim fid$(86)
+		rep$=STBL("!DSK_"+dev$)
+		rep$=rep$(1,len(rep$)-1)
+        	dim fid$(86)
 		fid$(1,2)=dev$
 		fid$(6,1)=$00$
-		fid$(23)=STBL("!DSK_"+dev$)
+		fid$(23)=rep$
 	else
         	dim fid$(72)
         	fid$(1)=fid(0) 

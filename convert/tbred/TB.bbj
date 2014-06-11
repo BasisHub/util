@@ -1324,8 +1324,7 @@ REM         info!.setKeyName(0,newKeyName$)
         DSDError:
         System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
         methodret ""
-      methodend 
-
+        throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
 
       method public static LinkedHashMap getDeviceList()
         if #deviceList!=null() then 

@@ -904,7 +904,7 @@ REM         info!.setKeyName(0,newKeyName$)
     methodend  
 
 
-    method public static BBjString DSD(BBjString dev$) 
+    method public static BBjString DSD0(BBjString dev$) 
 	SETERR ERR_DSD
 	if #LIKE(dev$,"D?") then
 		rep$=STBL("!DSK_"+dev$)
@@ -1282,13 +1282,14 @@ REM         info!.setKeyName(0,newKeyName$)
         methodret ""
       methodend 
 
-      method public BBjString DSD(BBjString in$) 
+
+    method public static BBjString DSD(BBjString in$) 
         seterr DSDError
         dim dsd$(150) 
 
         config$=BBjApi().getConfig().getConfigFileName()
         ch=unt 
-        open(ch)"|/bin/cat "+config$+" | grep "+in$
+        open(ch)"|/bin/cat "+config$+" | grep '^ALIAS "+in$+" '"
         read(ch,end=*next)dAlias$
         if pos(" "+in$+" "=dAlias$,1,1)=0 then dAlias$="" endif 
         close(ch)
@@ -1327,8 +1328,8 @@ REM         info!.setKeyName(0,newKeyName$)
         methodret dsd$
         DSDError:
         System.out.println("Error DSD"+str(err)+" "+str(tcb(5)))
-        methodret ""
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
+      methodend 
 
       method public static LinkedHashMap getDeviceList()
         if #deviceList!=null() then 

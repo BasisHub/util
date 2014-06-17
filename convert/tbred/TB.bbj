@@ -1195,6 +1195,8 @@ REM         info!.setKeyName(0,newKeyName$)
           fst$(5,1)=$00$      
           switch 1
           case bbjfiletype$=$05$;fst$(6,1)=$0A$;break
+          case bbjfiletype$=$0D$;fst$(6,1)=$06$;break
+          case bbjfiletype$=$03$;fst$(6,1)=$06$;break
           case bbjfiletype$>=$20$;fst$(6,1)=$06$;break
           rem $00$ to $04$ default 
           case default; fst$(6,1)=bbjFileType$

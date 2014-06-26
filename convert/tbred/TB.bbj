@@ -33,6 +33,7 @@ class public TB
 	C=UNT; OPEN (C,ERR=UNT_END) fichier$
 	fichier$=CVS(FID(C)(9),2)
 	CLOSE(C)
+	C=0
 	lcan$=CHN
 	i=1
 	WHILE (i < LEN(LCAN$) )
@@ -49,6 +50,7 @@ class public TB
 		i=i+2
 	WEND
 	UNT_END:
+	IF C>0 THEN CLOSE (C)
 	methodret canal
     methodend
 

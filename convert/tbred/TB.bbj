@@ -16,6 +16,17 @@ class public TB
     field public static BBjFileSystem fileSystem! = bbjapi().getFileSystem() 
     field private static LinkedHashMap deviceList! = #getDeviceList()
 
+    method public static Boolean isProgram(BBjString file$)
+	isFichier! = bbjapi().FALSE
+
+	tstprog!=BBjAPI().getProgramInfo(file$,ERR=isprog_exit)
+	tmp$=CPL(tstprog!.getListingVector().get(0),ERR=isprog_exit)
+	isFichier! = bbjapi().TRUE
+
+	isprog_exit:
+	methodret isFichier!
+    methodend
+
     method public static BBjNumber UNT0(BBjString fichier$)
 	canal=0
 	SETERR UNT_END
@@ -471,6 +482,12 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
            case temp$(1,1)=$0D$;fid_tbd$(10,1)=$06$;break 
            case default;fid_tbd$(10,1)=temp$(1,1);break
         swend
+
+	if (fid_tbd$(10,1) = $03$ ) then
+		if (#isProgram(temp$(9))) then
+			fid_tbd$(10,1)=$04$
+		endif
+	endif
 
         let rec_num=dec(temp$(3,4))
         let fid_tbd$(12,3)=bin(rec_num)
@@ -1184,7 +1201,7 @@ REM         info!.setKeyName(0,newKeyName$)
         mfid$=fid(ch)
         close(ch)
 
-                dim fst$(118)
+        dim fst$(118)
         if option=1 then 
           rem 1-2
           fst$(1)=$0020$
@@ -1193,10 +1210,9 @@ REM         info!.setKeyName(0,newKeyName$)
           rem 5-6 file type 
           bbjFileType$=mfid$(1,1) 
 	  if (bbjFileType$ = $03$ ) then
-		tstprog!=BBjAPI().getProgramInfo(file$,ERR=fst_testprog)
-		tmp$=CPL(tstprog!.getListingVector().get(0),ERR=fst_testprog)
+		if (#isProgram(file$)) then
 		bbjFileType$=$04$
-		fst_testprog:
+		endif
 	  endif
           fst$(5,1)=$00$      
           switch 1

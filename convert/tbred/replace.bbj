@@ -144,7 +144,7 @@ REM rem replace close(0)
 REM z! = z!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
 REM 
 REM rem replace DEV 
-REM z! = z!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+\$0D\$$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
+REM z! = z!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+""0D""$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
 REM 
 REM rem can use opt as variable replace mode?= by opt= 
 REM z! = z!.replaceAll("MODE\?\=","OPT\=") 

@@ -236,7 +236,7 @@ class public PgmLine
         statement! = statement!.replaceAll("CLOSE\ *?\(\ *?0\ *?\)","TB.closeAll\(\)")  
 
                 rem replace DEV 
-        statement! = statement!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+\$0D\$$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
+        statement! = statement!.replaceAll("(OPEN\ *?\(.*?\,)(DEV\=)(.*?)(\,|\))","$1MODE=""PTON=""+HTA($3)+""0D""$4").replaceAll("(OPEN.*?MODE\=\""PTON\=\""\+HTA\(.*?\).*?\))(.*?)(\;|$)","$1""LRA""$3")
 
                 rem can use opt as variable replace mode?= by opt= 
         statement! = statement!.replaceAll("MODE\?\=","OPT\=") 

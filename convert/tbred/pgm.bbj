@@ -6,7 +6,7 @@ REM  */
 use java.util.regex.Pattern
 use java.util.regex.Matcher
 use java.util.LinkedHashMap
-use org.apache.commons.lang3.StringUtils
+use org.apache.commons.lang.StringUtils
 use java.lang.reflect.Array
 use java.lang.Boolean
 

@@ -1007,7 +1007,9 @@ REM         info!.setKeyName(0,newKeyName$)
               rem windows only 16-17  Usable screen width, binary; Windows CE only  
               rem windows only 18-19  Usable screen height, binary; Windows CE only
               cmd$=device!.getFieldAsString("PHYS")
-              cmd$=cmd$(pos("LP"=cvs(cmd$,4)))
+	      if (pos("LP"=cvs(cmd$,4))>0) then
+                  cmd$=cmd$(pos("LP"=cvs(cmd$,4)))
+	      endif
               
               xfd$=xfd$+cmd$
 

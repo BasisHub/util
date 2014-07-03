@@ -1154,6 +1154,9 @@ REM         info!.setKeyName(0,newKeyName$)
     method public static void killSession(BBjString ses$) 
         seterr killError 
         if ses$="" then methodret 
+	if ses$(1,1) <> "T" then 
+		ses$="T"+ses$
+	endif
         declare BBjVector sessions!  
 	declare BBjSessionInfo session!
 

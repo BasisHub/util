@@ -1155,15 +1155,17 @@ REM         info!.setKeyName(0,newKeyName$)
         seterr killError 
         if ses$="" then methodret 
         declare BBjVector sessions!  
+	declare BBjSessionInfo session!
 
                 sessions! = bbjapi().getSessionInfos()
 
                 for i=0 to sessions!.size()-1 
-            if pos(ses$=cast(BBjSessionInfo, sessions!.get(i)).getIPAddress())>0 then 
-                bbjapi().killSession(cast(BBjSessionInfo, sessions!.get(i)),"admin","admin123")
-                methodret
-            endif 
-        next i
+		   session!=cast(BBjSessionInfo, sessions!.get(i))
+                   if session!.getTerminalID() = ses$ then 
+                      bbjapi().killSession(session!,"admin","admin123")
+                      methodret
+                   endif 
+                next i
         methodret
         killError: 
         System.out.println("Error killing session"+str(err)+str(tcb(5)))

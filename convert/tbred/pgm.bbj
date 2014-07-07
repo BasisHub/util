@@ -88,8 +88,7 @@ class public PgmLine
         m! = p!.matcher(#pgmLine!)
         startline=0 
         while m!.find() 
-
-                        statement! = #pgmLine!.substring(startline,m!.end()) 
+                statement! = #pgmLine!.substring(startline,m!.end()) 
 
                 if cvs(statement!,3)=m!.group() then    
                 #statements!.add(m!.group().trim())
@@ -130,6 +129,7 @@ class public PgmLine
          rem replace round brackets 
          if statement!.matches(".*?\(.*?\).*") then statement! = StringReplace.replaceRoundBrackets(statement!) endif 
 
+         
          if statement!.matches(".*\]\w+?.*") then statement! = StringReplace.replaceENV(statement!) endif 
 
 
@@ -229,7 +229,7 @@ class public PgmLine
             statement! = statement!.replaceAll("(LET\ *?)(.*?\$)\ *?\=\ *?(WIN\(GET\ *?CURSOR\ *?\))(\,ERR\=\d{4,}|\;|$)","CALL ""DB%WIN"",""GETCURSOR"",$2$4")                                   
         endif 
 
-                REM make sure there is a , after print ATTR
+        REM make sure there is a , after print ATTR
         statement! = statement!.replaceAll("(PRINT\ *?'ATTR'\ *?\(.*?\))(?!\,)(.*?)(\;|$)","$1,$2$3") 
 
                 rem replace close(0) 
@@ -247,7 +247,7 @@ class public PgmLine
                 REM REPLACE WINDOW 
         rem replace WIN GET LIST 
 
-                if statement!.matches(".*?WIN\ *?\(GET\ *?LIST\).*") then statement! = StringReplace.replaceWinGet(statement!) 
+        if statement!.matches(".*?WIN\ *?\(GET\ *?LIST\).*") then statement! = StringReplace.replaceWinGet(statement!) 
         rem replace WIN GET INFO 
         if statement!.matches(".*?WINDOW\ GETINFO.*") then statement! = StringReplace.replaceWinGetInfo(statement!) 
 
@@ -272,7 +272,6 @@ class public PgmLine
                 rem remove END= in remove 
         statement!=statement!.replaceAll("(REMOVE\ .*?),END=\d{4,}","$1") 
 
-
                 rem replace RELEASE another session killSEssion 
         statement! = statement!.replaceAll("(RELEASE\ *?)(\w.*?)(\;|$)","TB.killSession($2)$3") 
 
@@ -290,14 +289,18 @@ class public PgmLine
         REM replace DOM -> ERR in call 
         statement! = statement!.replaceAll("(CALL\ *?.*?\,)DOM\=","$1ERR=")  
 
+        
+        statement!=statement!.replaceAll("\'G(\d)\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS',""$1"",'GE'")
+        statement!=statement!.replaceAll("\'GA\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS',"":"",'GE'")
 
 
         lineOk: 
         pgmLine! = pgmLine!+statement!+" "
      next i
 
-          rem replace CVT         
-     if pgmLine!.matches(".*CVT\(.*") then pgmLine! = StringReplace.substringCVT(pgmLine!) endif
+          rem replace CVT    
+          rem no need to replace CVT     
+ rem  if pgmLine!.matches(".*CVT\(.*") then pgmLine! = StringReplace.substringCVT(pgmLine!) endif
 
 
 REM       if pgmLine!.matches(".*IF.*THEN.*") pgmLine!=StringReplace.replaceIFF47(pgmLine!,"(\w*?\$\[?[^\<^\>^\=^\ ]*\([^\<^\>^\=^\ ^CVS\(^LEN\(]*?\))") endif
@@ -312,7 +315,7 @@ REM       if pgmLine!.matches(".*IF.*THEN.*") pgmLine!=StringReplace.replaceIFF4
             if pgmline!.matches(".*?(PKY\ *?\()(.*?)(\,).*?ERR\=(\d{1,}).*") then pkyErr=1 endif 
             if pgmline!.matches(".*?(PKY\ *?\()(.*?)(\,).*?END\=(\d{1,}).*") then pkyEnd=1 endif
             
-            if pkyErr=0 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?),END\=(\d{1,}.*?)(\;|$)","$1ERR\=$2$3") endif 
+            if pkyErr=0 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?),END\=(\d{1,}.*?)(\;|$)","$1,ERR\=$2$3") endif 
             if pkyErr=1 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?)(,END\=\d{1,})(.*?\;|.*?$)","$1$3") endif 
               
            pgmline!=pgmline!.replaceAll("PKY\(","TB.PKY(")
@@ -421,7 +424,7 @@ REM         keyWordMap!.put("","") ;
 
         rem  replace global vars like ]USER$ -> ENV_USER$   
     method public static String replaceENV(String z!)  
-        z!=z!.replaceAll("\](?=\b\w+)\b","_")    
+        z!=z!.replaceAll("\](?=\b\w+)\b(?=(?:(?:[^""]*""){2})*[^""]*$)","_")    
         REM replace QUO WITH """ 
         z!=z!.replaceAll("(?<=\+)QUO|QUO(?=\+)|(?<=\+)QUO(?=\+)","""") 
         methodret z!
@@ -685,7 +688,8 @@ REM             System.out.println(z!)
             beginLine! = z!.substring(startLine,m!.start(1))
             endline! = ""
             keyString!=m!.group(4) 
-            keyString! = keyString!.replaceAll("""","""""")            
+            keyString! = keyString!.replaceAll("([A-Z]\w+)","""+str($1)+""")
+            
             newLine! = newLine!+beginLine!+"TB.ADDSORT(TB.REPDSK("+m!.group(5)+")+"+m!.group(2)+","+m!.group(3)+","""+keyString!+""")"
             if z!.substring(m!.end(5)).indexOf(";")>-1 then endLine=m!.end(5) endif 
             startline=m!.end(5)
@@ -1225,6 +1229,11 @@ REM DP%HISTOC 0>LIST 41032
 z$="41032 ADDSORT NOM_WRK$,""Date"":[15:1:LG_KEY]+[3:1:8:""D""]+[4:1:6:""D""]+[1:1:1]+[2:1:3],NUM(P9$(23,1))"
 z$="1412 LET EDITIP_KEY$=PKY(C_EDITIP,ERR=2344,END=1416);LET EDITIP_KEY$=PKY(C_EDITIP,END=1416,ERR=3484)"
 rem ;;LET EDITIP_KEY$=PKY(C_EDITIP,END=2344,KNUM=""test123"")"
+z$="05220 LET PRM$[1]=""|Code/Nature/Type{?????[CMTP]S}|1,7:0=Format:24=Désignation:33[?]=Nature:34[?]=Type:42[?]=Génération étiquette:41[?]=Génération OF"""
+z$="0333 print 'G0'"
+z$="01411 LET K$=PKY(ch20,END=01412)"
+z$="41032 ADDSORT NOM_WRK$,""Date"":[15:1:LG_KEY]+[3:1:8:""D""]+[4:1:6:""D""]+[1:1:1]+[2:1:3],NUM(P9$(23,1))"
+z$="30262 ADDSORT WRK31_FCH$,""Date"":[3:1:8]+[1:1:PLNEXP_LGK],DSK"
 l! = new PgmLine(z$) 
 
 ?l!.getBBjLine()

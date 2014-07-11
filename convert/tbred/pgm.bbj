@@ -290,8 +290,8 @@ class public PgmLine
         statement! = statement!.replaceAll("(CALL\ *?.*?\,)DOM\=","$1ERR=")  
 
         
-        statement!=statement!.replaceAll("\'G(\d)\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS',""$1"",'GE'")
-        statement!=statement!.replaceAll("\'GA\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS',"":"",'GE'")
+        statement!=statement!.replaceAll("\'G(\d)\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS'+""$1""+'GE'")
+        statement!=statement!.replaceAll("\'GA\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS'+"":""+'GE'")
 
 
         lineOk: 

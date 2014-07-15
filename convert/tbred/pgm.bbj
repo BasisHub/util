@@ -689,7 +689,6 @@ REM             System.out.println(z!)
             endline! = ""
             keyString0!=m!.group(4) 
 	    keyString!=""
-	    escape
 	    while (keyString0!.length() > 0)
 	      p=keyString0!.indexOf("""D""")
 	      if ( p > 0 ) then

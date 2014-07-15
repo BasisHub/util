@@ -687,7 +687,19 @@ REM             System.out.println(z!)
         while m!.find() 
             beginLine! = z!.substring(startLine,m!.start(1))
             endline! = ""
-            keyString!=m!.group(4) 
+            keyString0!=m!.group(4) 
+	    keyString!=""
+	    escape
+	    while (keyString0!.length() > 0)
+	      p=keyString0!.indexOf("""D""")
+	      if ( p > 0 ) then
+		keyString! = keyString! + keyString0!.substring(0,p)+"""""D"""""
+		keyString0! = keyString0!.substring(p+3)
+	      else
+		keyString! = keyString! + keyString0!
+		keyString0! = ""
+	      endif
+	    wend
             keyString! = keyString!.replaceAll("([A-Z]\w+)","""+str($1)+""")
             
             newLine! = newLine!+beginLine!+"TB.ADDSORT(TB.REPDSK("+m!.group(5)+")+"+m!.group(2)+","+m!.group(3)+","""+keyString!+""")"

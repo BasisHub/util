@@ -1389,7 +1389,10 @@ REM         info!.setKeyName(0,newKeyName$)
       method public static BBjString PKY(BBjNumber channel) 
         seterr PKYError
             if key(channel,END=PKYEnd)=keyf(channel,END=*NEXT) then goto PKYError endif 
-            read (channel,dir=-1,END=*NEXT)
+            notPartialKey=1 
+            rem read with partial key 
+            if keyr(channel,err=*next)<>keyp(channel) then notPartialKey=0 endif 
+            if notPartialKey then read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
             read (channel,END=*NEXT) 
             methodret pky$
@@ -1398,10 +1401,10 @@ REM         info!.setKeyName(0,newKeyName$)
         PKYErrorKey: 
             read (channel)
             throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
-	PKYEnd:
-		key$=keyp(channel,END=PKYError)
-		read (channel,key=key$,dir=-1,end=*NEXT)
-		pky$=key(channel,END=PKYError)
+      	PKYEnd:
+      		key$=keyp(channel,END=PKYError)
+      		read (channel,key=key$,dir=-1,end=*NEXT)
+      		pky$=key(channel,END=PKYError)
             	read (channel,END=*NEXT) 
             	methodret pky$
       methodend 

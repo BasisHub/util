@@ -1388,13 +1388,19 @@ REM         info!.setKeyName(0,newKeyName$)
 
       method public static BBjString PKY(BBjNumber channel) 
         seterr PKYError
+	    keyRead$=$ff$
+	    keyRead$=keyr(channel,err=*next)
             if key(channel,END=PKYEnd)=keyf(channel,END=*NEXT) then goto PKYError endif 
             notPartialKey=1 
             rem read with partial key 
             if keyr(channel,err=*next)<>keyp(channel) then notPartialKey=0 endif 
             if notPartialKey then read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
-            read (channel,END=*NEXT) 
+	    if (keyRead$ <> $FF$)  then
+            	read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
+	    else
+		read (channel,END=*NEXT)
+	    fi
             methodret pky$
         PKYError: 
             throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
@@ -1402,10 +1408,15 @@ REM         info!.setKeyName(0,newKeyName$)
             read (channel)
             throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
       	PKYEnd:
-      		key$=keyp(channel,END=PKYError)
-      		read (channel,key=key$,dir=-1,end=*NEXT)
-      		pky$=key(channel,END=PKYError)
-            	read (channel,END=*NEXT) 
+		notPartialKey=1
+		if keyr(channel,err=*next) > keyl(channel,end=*next) then notPartialKey=0 endif
+            	if notPartialKey then read (channel,key=keyl(channel,end=*next),dir=0,END=*NEXT)
+            	pky$=keyp(channel,err=PKYErrorKey)
+	    	if (keyRead$ <> $FF$)  then
+            		read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
+	    	else
+			read (channel,END=*NEXT)
+	    	fi
             	methodret pky$
       methodend 
 

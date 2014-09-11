@@ -50,13 +50,13 @@ REM dummy$=stbl("!LOCALE","fr_FR")
 REM 
 REM ? TB.NTD(735242.43778935,"YYYYMONDD") 
 REM rem doit retourner 2014JAN07
-REM rem MON correspond au mois sur 3 caractères en majuscule"
+REM rem MON correspond au mois sur 3 caractï¿½res en majuscule"
 REM ? TB.NTD(735242.43778935,"YYYYDyDD")
 REM rem doit retourner 2014Mar07
-REM rem Dy correspond au jour de la semaine sur 3 caractères avec premier caractère en majuscule"
+REM rem Dy correspond au jour de la semaine sur 3 caractï¿½res avec premier caractï¿½re en majuscule"
 REM ? TB.NTD(735242.43778935,"YYYYDYDD") 
 REM rem doit retourner 2014MAR07
-REM rem DY correspond au jour de la semaine sur 3 caractères en majuscule"
+REM rem DY correspond au jour de la semaine sur 3 caractï¿½res en majuscule"
 REM ? TB.NTD(735242.43778935,"Day DD/MM/YYYY") 
 REM rem doit retourner ""Mardi 07/01/2014""
 REM rem Le jour doit commencer par une majuscule"
@@ -202,8 +202,26 @@ REM ?""
 REM wend 
 
 
-? TB.LIKE("{1}Code","{?}*")
-? TB.LIKE("Code","{?}*")
+REM ? TB.LIKE("{1}Code","{?}*")
+REM ? TB.LIKE("Code","{?}*")
 
+
+open(1)"data/CUSTOMER"
+
+read record(1,key="000010") 
+while 1 
+k$=TB.PKY(1,err=*break);? k$; read record(1,key=k$) 
+wend 
+
+close(1) 
+
+open(1)"data/CUSTOMER"
+
+read record(1,key="00001",dom=*next) 
+while 1 
+k$=TB.PKY(1,err=*break);? k$; read record(1,key=k$) 
+wend 
+
+close(1) 
 
 

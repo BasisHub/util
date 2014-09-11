@@ -1,0 +1,423 @@
+rem "* DB%WIN ** (BBj) Traitements simulation fenêtres WINDOW BB3
+rem "* -----------------------------------------------------------
+rem "* COPYRIGHT INFODEV S.A. 
+rem "* Créé en Décembre 2013 par CR
+rem "* migration : CVT
+rem "* -----------------------------------------------------------
+rem "* fonc$= 'GETINFO'  Récupère les infos utiles d'une fenêtre
+rem "*        'PUT CHAR' Affiche caractères + attributs à l'écran 
+rem "*        'GET CHAR' Retourne le contenu d'une fenêtre
+rem "*        'SELECT'   Sélectionne une fenêtre
+rem "*        'GET LIST' Retourne la liste des fenêtres
+rem "*************************************************************					
+
+  enter fonc$,valeur$,parm$[all],retour$,err=*next
+
+   
+  nbfenmax=255
+  
+  rem " !WINORDRE = ordre d'afffichage des fenêtres (idem BB3)
+  rem " Doit au moins contenir "0       "
+  
+  rem " Exemple : si on créé une fenêtre "toto" puis une fenêtre "titi" puis 
+  rem             qu'on resélectionne la fenêtre toto, on aura
+  rem " !WINORDRE(1,8)  = "0       " = fenêtre principale "0"  
+  rem " !WINORDRE(9,8)  = "titi    " = fenêtre niveau intémédiaire 
+  rem " !WINORDRE(17,8) = "toto    " = fenêtre affichée au dessus des autres
+  
+  winordre$=stbl("!WINORDRE",err=*next)
+  if winordre$="" then winordre$=pad("0",8)
+  
+  
+  rem " !WINLISTE = liste des fenêtres positionnée suivant leur no BBj
+  rem " Doit au moins contenir "0       "
+  
+  rem " Exemple : si on créé une fenêtre "toto" puis une fenêtre "titi" on aura
+  rem " !WINLISTE(1,8)  = "0       " = fenêtre BBj principale "0"  
+  rem " !WINLISTE(9,8)  = "toto    " = fenêtre BBj 1 
+  rem " !WINLISTE(17,8) = "titi    " = fenêtre BBj 2    
+  
+  winliste$=stbl("!WINLISTE",err=*next)
+  if winliste$="" then winliste$=pad("0",8)
+  
+  rem call"%DEBUG",fonc$,valeur$
+   
+    
+  rem "----- Aiguillage suivant fonction
+
+  fonc$=CVS(fonc$,128+4)
+  
+  if fonc$="GETINFO"                then gosub Lgetinfo         ; goto Lexit
+  if fonc$="GETLIST"                then gosub Lgetlist         ; goto Lexit
+  if fonc$="GETCURSOR"              then gosub Lgetcursor       ; goto Lexit
+  if fonc$="GETCURSORPHYSICAL"      then gosub Lgetcursorphy    ; goto Lexit
+  if fonc$="GETCURSOR,PHYSICAL"     then gosub Lgetcursorphy    ; goto Lexit
+  if fonc$="GETCHAR"                then gosub Lgetchar         ; goto Lexit
+  if fonc$="GETNOWIN"               then gosub Lgetnowin        ; goto Lexit
+  if fonc$="PUTCHAR"                then gosub Lputchar         ; goto Lexit
+  if fonc$="ADDWIN"                 then gosub Laddwin          ; goto Lexit
+  if fonc$="SELECT"                 then gosub Lselect          ; goto Lexit
+  if fonc$="SELECTNOUPDATE"         then gosub Lselectnoupdate  ; goto Lexit
+  if fonc$="REFRESH"                then gosub Lrefresh         ; goto Lexit
+  if fonc$="DELETE"                 then gosub Ldelete          ; goto Lexit
+
+Lexit:
+
+tmp$=stbl("!WINORDRE", winordre$)
+tmp$=stbl("!WINLISTE", winliste$)
+
+rem open(99)"PPE"
+rem print (99) pad("ORDRE='"+winordre$+"'",50)+pad("LISTE='"+winliste$+"'",50)
+rem print (99)
+rem close(99)
+
+exit
+
+rem "----- Fonction WINDOW GETINFO
+Lgetinfo: 
+
+  wininfo$=fin(0)
+  gosub Lgetwinactive
+  
+  DIM parm$[25]
+  
+  parm$[1]=winactive$
+  parm$[3]=$00$+wininfo$(1,1)+$00$+wininfo$(2,1)
+  parm$[4]=$00$+wininfo$(5,1)+$00$+wininfo$(6,1)
+  parm$[7]=$00$+$00$+$00$+$00$
+  parm$[8]=wininfo$(7,1)
+  parm$[9]=wininfo$(8,1)
+  
+  bb3win = 0
+  parm$[16]=chr(bb3win)
+  
+  rem "--- fenêtre principale   
+  if cvs(valeur$,2)="0" or cvs(valeur$,2)="NAME=0" then 
+    
+    gosub Linfoterm
+    
+    parm$[1]="0"
+    parm$[3]=$00$+$00$+$00$+$00$
+    parm$[4]=$00$+$00$+$00$+$00$
+    parm$[7]=$00$+$00$+$00$+$00$
+    parm$[8]=bin(lsc)
+    parm$[9]=bin(hsc)
+  fi
+  
+return
+
+rem "----- Fonction WINDOW GETLIST
+Lgetlist:
+
+  valeur$=$00$+chr(len(winordre$)/8)+winordre$
+
+RETURN
+
+rem "----- Fonction qui retourne le numéro d'une fenêtre Bbj en fonction de son nom
+Lgetnowin:
+
+  nowin=-1
+  
+  if cvt(valeur$,128)="" then
+    gosub Lgetwinactive
+    valeur$=winactive$
+  fi
+
+  pp=pos(pad(valeur$,8)=winliste$,8)
+  if pp<>0 then nowin=(pp-1)/8
+  
+  retour$=str(nowin)
+
+RETURN
+
+
+rem "----- Fonction WIN GET CURSOR : récup position curseur dans la fenêtre
+Lgetcursor:
+  
+  tmp$=fin(0)
+  valeur$=$00$+tmp$(7,1)+$00$+tmp$(8,1)
+
+return
+
+rem "----- Fonction WIN GET CURSOR PHYSICAL : récup position curseur absolue
+Lgetcursorphy:
+  
+  tmp$=fin(0)
+  valeur$=$00$+tmp$(1,1)+$00$+tmp$(2,1)
+
+return
+
+rem "----- Fonction WIN PUT CHAR 
+Lputchar: 
+  
+  gosub Linitgraph
+  
+  coln=num(parm$[1])
+  lign=num(parm$[2])
+  larg=num(parm$[3])
+  haut=num(parm$[4])
+  
+  tbt$=parm$[5]
+  tba$=parm$[6]
+
+  rem " décomposition si dans tbt$ on a tbt$+tba$ comme en bb3
+  if len(tba$)=0 and len(tbt$)>larg*haut then 
+    tba$=tbt$(9+larg*haut)
+    tbt$=tbt$(7,larg*haut)
+  fi
+
+  tbt$=pad(tbt$,larg*haut)
+  tba$=pad(tba$,larg*haut,$00$)
+
+  print @(coln,lign),'ge','scroll'("off"),
+    
+  for l=1 to haut
+  
+    tbt_lig$=tbt$(1+(l-1)*larg,larg)
+    tba_lig$=tba$(1+(l-1)*larg,larg)
+  
+    rem Remplacement des caractères graphiques 
+    boucleGraph:
+    
+    pp=pos($20$<=tba_lig$)
+    if pp>0 then
+        car$='gs'+"0123457698:"( dec($00$+tbt_lig$(pp,1)) -graph+1  ,1)  +'ge'
+        tbt_lig$=tbt_lig$(1,pp-1)+car$+tbt_lig$(pp+1) 
+        tba_lig$=tba_lig$(1,pp-1)+fill( len(car$),chr( dec($00$+tba_lig$(pp,1))-32))+tba_lig$(pp+1)
+        goto boucleGraph
+    fi
+    
+    rem Remplacement des attributs
+    ligne$=""
+    
+    boucleAttr: 
+  
+    pp=pos(tba_lig$(1,1)<>tba_lig$)
+    if pp>0 and tba_lig$<>"" then
+      ligne$=ligne$+'attr'( dec($00$+tba_lig$(1,1)))+tbt_lig$(1,pp-1)
+      tba_lig$=tba_lig$(pp)
+      tbt_lig$=tbt_lig$(pp)
+      goto boucleAttr
+    fi
+    ligne$=ligne$+'attr'(dec($00$+tba_lig$(1,1)))+tbt_lig$
+        
+    print @(coln,lign+l-1),ligne$,
+  
+  next l
+
+  print 'attr'(0),'ge',
+
+return
+
+
+rem "* Fonction WIN GET CHAR
+rem "* récupère la liste des caractères et attributs d'une fenêtre
+rem "* au format BB3
+Lgetchar: 
+
+  gosub Linitgraph
+
+  coln=num(parm$[1])
+  lign=num(parm$[2])
+  larg=num(parm$[3])
+
+  tbt$=$0000$
+  tba$=$0001$
+
+  print 'ci','ee','kl','gs',@(coln,lign),'rl',
+  
+  c_tmp=unt; open(c_tmp)FID(0)
+  read record (c_tmp,siz=larg*4) ligne$
+  close(c_tmp)
+  
+  print 'ge','ku','be','ci',
+  
+  nbc=min(len(ligne$)/4,larg)
+
+  for c=1 to nbc
+  
+    tmp$=ligne$(1+(c-1)*4,4)
+    atr$=and(tmp$(3,1),$3f$)
+    car$=tmp$(4,1)
+     
+    if and(atr$,$20$)=$20$ then 
+      car$=graph$(num(car$)+1,1)
+    fi  
+    
+    atr$=chr(dec($00$+atr$))
+    
+    tbt$=tbt$+car$
+    tba$=tba$+atr$
+  
+  next c
+
+  retour$=$0002$+chr(int(nbc/256))+chr(mod(nbc,256))+tbt$+tba$
+
+return
+
+rem "----- Mémorisation et récupération du nom de la nouvelle fenêtre
+Laddwin:
+  
+  pp=pos(fill(8)=winliste$,8)
+  if pp=0 then pp=len(winliste$)+1,winliste$=winliste$+fill(8)
+  
+  if cvs(valeur$,2)="" then valeur$=str((pp-1)/8) 
+  winliste$(pp,8)=pad(valeur$,8)
+  
+  winordre$=winordre$+pad(valeur$,8)
+  
+return
+
+
+rem "----- Sélection d'une fenêtre
+Lselect:
+    
+    pp=pos(pad(valeur$,8)=winliste$,8)
+    if pp<>0 then
+      nowin=(pp-1)/8
+      
+      print (0,err=*next) 'goto'(nowin),
+      
+    fi
+    
+    pp=pos(pad(valeur$,8)=winordre$,8)  
+    if pp<>0 then
+      winordre$=winordre$(1,pp-1)+winordre$(pp+8)+pad(valeur$,8)
+    fi
+
+return
+
+rem "----- Sélection d'une fenêtre sans changer l'ordre des fenêtres
+Lselectnoupdate:
+    
+    winordre_prec$=winordre$
+
+    gosub Lselect
+
+    pp=pos(pad(valeur$,8)=winordre_prec$,8)
+    
+    if pp>=1 then
+        
+      for w=pp to len(winordre_prec$) step 8
+    
+        pp2=pos(winordre_prec$(w,8)=winliste$,8)
+        if pp2<>0 then
+            nowin=(pp2-1)/8
+            print (0,err=*next) 'overlay'(nowin),
+        fi
+        
+      next w  
+    
+    fi
+
+return
+
+rem "----- Reaffichage de la liste des fenêtre dans l'ordre
+Lrefresh:
+
+    if valeur$="" then 
+      liste$=winordre$
+    else
+      liste$=valeur$
+    fi
+    
+    for w=1 to len(liste$) step 8
+    
+      win$=liste$(w,8)
+      pp=pos(win$=winliste$,8)
+    
+      if pp<>0 then
+        nowin=(pp-1)/8
+        
+        print (0,err=*next) 'goto'(nowin),
+        
+      fi
+    
+    next w
+
+    winordre$=liste$
+
+return
+
+rem "----- Suppression d'un fenêtre
+Ldelete:
+    
+    
+        
+    rem "----- WINDOW DELETE (ALL)
+    if valeur$="ALL" then
+      
+      rem "--- mémo dernier masque affiché
+      tmp$=stbl("!MSKNAME","",err=*next)
+        
+      nbwin=max(int(len(winliste$)/8),16)
+      
+      for nowin=1 to nbwin
+        print (0,err=*next) 'drop'(nowin),
+      next nowin
+      
+      seterr 0
+      
+      winliste$=pad("0",8)
+      winordre$=pad("0",8)
+    
+    rem "----- WINDOW DELETE ("xxx")  
+    else
+      if cvs(valeur$,2)<>"" then
+        pp=pos(pad(valeur$,8)=winliste$,8)
+        if pp<>0 then
+          nowin=(pp-1)/8
+          print (0,err=*next) 'drop'(nowin),
+          winliste$(pp,8)=fill(8)
+        fi
+        
+        pp=pos(pad(valeur$,8)=winordre$)
+        if pp<>0 then
+          winordre$=winordre$(1,pp-1)+winordre$(pp+8)
+        fi
+      fi
+    fi
+    
+return
+
+rem "----- Récupération infos du TERM
+Linfoterm:
+
+  lsc = 132
+  hsc = 42
+  id_term$ = stbl("!ID_TERM")
+  
+  if id_term$="ID_ANITA" then lsc = 80  , hsc = 25
+  if id_term$="ID_AN132" then lsc = 132 , hsc = 25
+  if id_term$="ID_ANXXL" then lsc = 132 , hsc = 42
+  if id_term$="ID_AN100" then lsc = 100 , hsc = 30
+
+return
+
+rem "----- Init chaine des caractères graphiques
+Linitgraph: 
+  
+  graph=dec($00$+ath(stbl("!PGCHARBASE")))
+  graph$=""
+  
+  for c=0 to 15
+    if c=6 then graph$=graph$+chr(graph+7); continue
+    if c=7 then graph$=graph$+chr(graph+6); continue
+    if c=8 then graph$=graph$+chr(graph+9); continue
+    if c=9 then graph$=graph$+chr(graph+8); continue
+    graph$=graph$+chr(graph+c)
+  next c
+  
+return
+
+rem "----- Retourne le nom BB3 de la fenêtre active
+
+Lgetwinactive:
+
+  winactive$ = winordre$(len(winordre$)-7,8)
+
+
+return
+
+
+

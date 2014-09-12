@@ -273,7 +273,6 @@ REM         seterr NTDJ_err
 
         ntd$=ntd!
         return_tnd:
-REM         if uppercase then ntd$=cvs(ntd$,4)
         methodret ntd$
         NTDJ_err:
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
@@ -366,11 +365,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
             let stringa$=swap(stringa$,$08$)            
         endif
 
-
-
-
-
-                CVTJ_exit:
+          CVTJ_exit:
         methodret stringa$
 
         CVTJ_err:

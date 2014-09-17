@@ -790,7 +790,7 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
 
             ch=unt;open(ch)file$ 
             info! = #fileSystem!.getFileInfo(ch) 
-
+            
             declare BBjKeyInfo keyInfo! 
             keyInfo! = #getKeyInfo(keyChain$) 
             info!.lock()
@@ -809,10 +809,10 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
          seterr remsort_error
             declare BBjFileInfo info! 
 
-                        ch=unt;open(ch)file$ 
+            ch=unt;open(ch)file$ 
             info! = #fileSystem!.getFileInfo(ch) 
 
-                        declare BBjKeyInfo keyInfo! 
+            declare BBjKeyInfo keyInfo! 
             info!.lock()
             info!.dropKey(sortname$)
             info!.unlock()
@@ -845,9 +845,9 @@ REM         if uppercase then ntd$=cvs(ntd$,4)
             if pos(":"=tmpKeySegment$,1,0)=2 then 
                 m_len=num(tmpKeySegment$(pos(":"=tmpKeySegment$,1,2)+1,pos("]"=tmpKeySegment$)-((pos(":"=tmpKeySegment$,1,2)+1))) )
                 m_desc!=bbjapi().FALSE
-            else
-                m_len=num( tmpKeySegment$(pos(":"=tmpKeySegment$,1,2)+1,pos(":"=tmpKeySegment$,1,3)-((pos(":"=tmpKeySegment$,1,2)+2))) )
-                if pos("D"=tmpKeySegment$)>0 then 
+            else 
+                m_len=num( tmpKeySegment$(pos(":"=tmpKeySegment$,1,2)+1,pos(":"=tmpKeySegment$,1,3)-((pos(":"=tmpKeySegment$,1,2)+1))) )
+                if pos("D"=tmpKeySegment$)>0 then
                     m_desc!=bbjapi().TRUE
                 else 
                     m_desc!=bbjapi().FALSE

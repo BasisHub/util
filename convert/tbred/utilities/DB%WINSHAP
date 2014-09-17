@@ -1,0 +1,50 @@
+rem "* DB%WINSHAP ** Remplace WINDOW SHAPE
+rem "* pour un cadre    : 'BOX',  largeur, hauteur, posx, posy
+rem "* pour une ligne hz: 'LINE', 0,       largeur, posx, posy
+rem "* pour une ligne ve: 'LINE', 1,       hauteur, posx, posy
+
+seterr Lsuite
+enter forme$,dim1,dim2,posx,posy,attribut,titre$
+
+Lsuite:
+  seterr Lexit
+  
+  forme$=cvs(forme$,4)
+  if forme$="BOX"   then goto Ldessin
+  if forme$="LINE"  then goto Lline
+  if forme$="VIDE"  then goto Ldessinvide
+
+  goto Lexit
+
+Lline:
+  
+  rem "--- Ligne horizontale
+  if dim1=0 then 
+    dim1=dim2
+    dim2=0
+    goto Ldessin
+  fi
+  
+  rem "--- Ligne verticale
+  if dim1=1 then 
+    dim1=0
+    goto Ldessin
+  fi
+
+  goto Lexit
+
+  
+Ldessin:
+
+  print 'BOX'(posx,posy,dim1,dim2,titre$,'attr'(attribut)),
+  goto Lexit
+
+
+Ldessinvide:
+  print 'scroll'(OFF),
+  for h=0 to dim2-1
+    print @(posx,posy+h),'attr'(attribut),fill(dim1),
+  next h
+
+Lexit:
+  Exit

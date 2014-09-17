@@ -202,8 +202,22 @@ REM ?""
 REM wend 
 
 
-? TB.LIKE("{1}Code","{?}*")
-? TB.LIKE("Code","{?}*")
+REM ? TB.LIKE("{1}Code","{?}*")
+REM ? TB.LIKE("Code","{?}*")
+REM 
+REM 
+REM 
+REM open(1)"data/CUSTOMER" 
+REM read record(1,key="00001",dom=*next) 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
+REM k$=TB.PKY(1); read record(1,key=k$)t$;?k$ 
 
-
+file$="CUSTOMER"
+s$="test"
+DSK=0
+TB.ADDSORT(TB.REPDSK(DSK,ERR=1151)+FILE$,S$,"[1:1:15]+[1:1:8:""D""]")  
 

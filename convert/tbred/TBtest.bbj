@@ -220,5 +220,5 @@ file$="CUSTOMER"
 DSK=0
 TB.ADDSORT(TB.REPDSK(DSK,ERR=1151)+FILE$,S$,"[1:1:15]+[1:1:8:""D""]")  
 
-rem 123
+rem 123456
 rem 

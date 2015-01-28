@@ -285,7 +285,11 @@ REM         seterr NTDJ_err
         seterr setdayError
             CC$="20" 
             if num(day$(7,2))>70 then CC$="19" endif            
-            dummy=jul(num(CC$+day$(7,2)),num(day$(1,2)),num(day$(4,2)))
+            if STBL("!LOCALE")="en_US" then  
+                dummy=jul(num(CC$+day$(7,2)),num(day$(1,2)),num(day$(4,2)))
+            else 
+                dummy=jul(num(CC$+day$(7,2)),num(day$(4,2)),num(day$(1,2)))
+            endif 
             dummy$=stbl("lastSetDay",str(date(0:"%Yl.%Mz.%Dz"))) 
             setday day$ 
             methodret
@@ -302,13 +306,21 @@ REM         seterr NTDJ_err
         lastSetDay$=stbl("lastSetDay") 
         
         if lastSetDay$<>date(0:"%Yl.%Mz.%Dz") then 
-            TB.SETDAY(date(0:"%Mz/%Dz/%Yz"))
+            if STBL("!LOCALE")="en_US" then 
+                    TB.SETDAY(date(0:"%Mz/%Dz/%Yz"))
+            else 
+                    TB.SETDAY(date(0:"%Dz/%Mz/%Yz"))
+            endif 
         endif 
    
         day$=day 
         CC$="20"
         if num(day$(7,2))>70 then CC$="19" endif      
-        julDate=jul(num(CC$+day$(7,2)),num(day$(1,2)),num(day$(4,2)))      
+        if STBL("!LOCALE")="en_US" then  
+            julDate=jul(num(CC$+day$(7,2)),num(day$(1,2)),num(day$(4,2)))      
+        else 
+            julDate=jul(num(CC$+day$(7,2)),num(day$(4,2)),num(day$(1,2)))      
+        endif 
         methodret julDate-1721423+TIM/24
         cdnError: 
         methodret JUL(0,0,0)-1721423+TIM/24

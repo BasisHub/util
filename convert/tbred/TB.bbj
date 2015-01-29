@@ -290,7 +290,7 @@ REM         seterr NTDJ_err
             else 
                 dummy=jul(num(CC$+day$(7,2)),num(day$(4,2)),num(day$(1,2)))
             endif 
-            dummy$=stbl("lastSetDay",str(date(0:"%Yl.%Mz.%Dz"))) 
+            dummy$=stbl("!lastSetDay",str(date(0:"%Yl.%Mz.%Dz"))) 
             setday day$ 
             methodret
         setdayError: 
@@ -303,7 +303,7 @@ REM         seterr NTDJ_err
     method public static BBjNumber CDN() 
         seterr cdnError 
         
-        lastSetDay$=stbl("lastSetDay") 
+        lastSetDay$=stbl("!lastSetDay") 
         
         if lastSetDay$<>date(0:"%Yl.%Mz.%Dz") then 
             if STBL("!LOCALE")="en_US" then 

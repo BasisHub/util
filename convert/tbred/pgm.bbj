@@ -281,6 +281,10 @@ class public PgmLine
 
         statement!=statement!.replaceAll("\'G(\d)\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS'+""$1""+'GE'")
         statement!=statement!.replaceAll("\'GA\'(?=(?:(?:[^""]*""){2})*[^""]*$)","'GS'+"":""+'GE'")
+        
+        
+        REM replace SETDAY - TB.SETDAY
+        statement!=statement!.replaceAll("(SETDAY)\ *?(.*?)(;|$)","TB.SETDAY($2)")
 
         lineOk: 
         pgmLine! = pgmLine!+statement!+" "
@@ -1136,4 +1140,13 @@ REM /*
     methodend 
 
 classend 
+
+z$="11210 SETDAY TB.NTD(TB.DTN(LOGIN_REC$[15],""YYYYMMDD""),""DD/MM/YY"");rem helllo "
+
+declare PgmLine p!
+p! = new PgmLine(z$) 
+z$ = p!.getBBjLine()
+
+? z$
+
 

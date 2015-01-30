@@ -301,7 +301,7 @@ class public PgmLine
             if pkyErr=0 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?),END\=(\d{1,}.*?)(\;|$)","$1,ERR\=$2$3") endif 
             if pkyErr=1 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?)(,END\=\d{1,})(.*?\;|.*?$)","$1$3") endif 
               
-           pgmline!=pgmline!.replaceAll("PKY\(","KEYR(")
+           pgmline!=pgmline!.replaceAll("PKY\(","TB.PKY(")
      
      endif    
      replacePGN:

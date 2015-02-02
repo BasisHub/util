@@ -803,7 +803,11 @@ REM         seterr NTDJ_err
     rem */
     method public static BBjString REPDSK(BBjNumber numdsk)
         seterr REPDSKError
-        methodret STBL("!DSK_D"+str(numdsk))
+        if numdsk<10 then 
+               methodret STBL("!DSK_D"+str(numdsk))
+       else
+               methodret STBL("!DSK_D"+chr(numdsk-10+65))
+       fi
         REPDSKError: 
         throw "Invalid disk",12
     methodend

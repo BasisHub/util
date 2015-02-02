@@ -1221,30 +1221,20 @@ REM         info!.setKeyName(0,newKeyName$)
 
     rem closeAll 
     method public static void closeAll() 
-        declare InetAddress addr! 
-        addr! = InetAddress.getByName("127.0.0.1") 
-
-        declare BBjAdminBase AdminBase! 
-        AdminBase! = BBjAdminFactory.getBBjAdmin(addr!,2002,BBjAPI().FALSE,100,"admin","admin123")
-
-        declare java.util.List openFiles! 
-        openFiles! = AdminBase!.getOpenFiles()
-
-        declare Iterator it!
-        it!=openFiles!.iterator()
-        mid=dec(info(3,0))
-        declare BBjAdminOpenFile tmpFile! 
-        if it!<>null() then 
-            while it!.hasNext()
-                tmpFile! = cast(BBjAdminOpenFile, it!.next()) 
-                idString$ = tmpFile!.getProperties().get("id")
-                fileOpenId=num(idString$(pos(":"=idString$)+1),err=*continue)
-                if fileOpenId=mid then 
-                    tmpFile!.forceClose()
-                endif 
-            wend 
+        LET C$=CHN
+        start=1 
+        rem // 0 should always be the first channel 
+        if dec(c$(1,2))=0 then start=3 endif 
+        if len(c$)>start then 
+            FOR C=start TO LEN(C$) STEP 2
+                ch=DEC(C$(C,2))
+                close(ch,err=errOnClose)
+                continue 
+                errOnClose:
+                if err=41 then continue 
+                System.out.println(pgm(-2)+" "+errmes(-1)+str(err)+"/"+str(tcb(5)))
+            NEXT C
         endif 
-
        methodend 
 
       method public static BBjString FST(BBjString file$, BBjNumber option) 

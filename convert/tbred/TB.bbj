@@ -518,6 +518,13 @@ REM         seterr NTDJ_err
 	    if len(temp$)=3 and pos(temp$(1,1)="PT")>0 then fid_tbd$=fid_tbd$(2)
             goto FIDJ_exit  
         fi
+        
+        rem legacy most TBD apps would not know what to do with MINI 
+        if temp$="MINI" then
+               fid_tbd$="X0"
+               goto FIDJ_exit
+        fi
+
 
         dim fid_tbd$(20)
         let fid_tbd$(4,6)=temp$(pos("/"=temp$,-1)+1)

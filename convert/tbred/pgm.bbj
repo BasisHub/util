@@ -115,7 +115,6 @@ class public PgmLine
      statement! = ""
      pgmLine! = ""
 
-
      for i=0 to #statements!.size()-1 
          statement! = #statements!.get(i).toString()
 
@@ -135,11 +134,13 @@ class public PgmLine
          rem mode LINK - not used ORACLE 
          statement!=statement!.replaceAll("MODE\?=""LINK","MODE=""LINK") 
          statement!=statement!.replaceAll("PGCHARBASE","ATH(STBL(""!PGCHARBASE""))")
-
+         
          rem replace open mode? mode shell with open on | 
          REM statement! = statement!.replaceAll("\,MODE\?\=""SHELL""\)","\)""\|""\+")   ;!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*?)?(\))","$1$2\)""\|""\+") 
-         statement! = statement!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
-
+         
+         if statement!.matches(".*\,MODE\?\=""SHELL"".*") then
+            statement! = statement!.replaceAll("\,MODE\?\=""SHELL""(\,ERR\=\d*)?(\)?)","$1$2\)""\|""\+") .replaceAll("\)\)\""","\)\""") 
+         endif 
 
          rem raplce ALL """" 
          replaceAll:
@@ -1141,7 +1142,8 @@ REM /*
 
 classend 
 
-z$="11210 SETDAY TB.NTD(TB.DTN(LOGIN_REC$[15],""YYYYMMDD""),""DD/MM/YY"");rem helllo "
+                 
+
 
 declare PgmLine p!
 p! = new PgmLine(z$) 

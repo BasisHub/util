@@ -897,6 +897,7 @@ REM         seterr NTDJ_err
             tmpKeySegment$ = str(segments![i],err=*break)
             m_field=num(tmpKeySegment$(pos("["=tmpKeySegment$)+1,pos(":"=tmpKeySegment$)-((pos("["=tmpKeySegment$)+1))) )
             m_pos=num(tmpKeySegment$(pos(":"=tmpKeySegment$,1,1)+1,pos(":"=tmpKeySegment$,1,2)-((pos(":"=tmpKeySegment$,1,1)+1))) )
+                        
             if pos(":"=tmpKeySegment$,1,0)=2 then 
                 m_len=num(tmpKeySegment$(pos(":"=tmpKeySegment$,1,2)+1,pos("]"=tmpKeySegment$)-((pos(":"=tmpKeySegment$,1,2)+1))) )
                 m_desc!=bbjapi().FALSE
@@ -1281,7 +1282,7 @@ REM         info!.setKeyName(0,newKeyName$)
 
                 rem *nix OS 
         ch=unt 
-        open(ch)"| /usr/bin/stat "+file$ 
+        open(ch)"| /usr/bin/stat "+file$ +" | sed 's/\x09/        /g'"
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
 

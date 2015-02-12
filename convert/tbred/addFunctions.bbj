@@ -24,11 +24,6 @@ addNEA:
     m_line$="NEA_ERR: RETURN 0";gosub addLine
     m_line$="FNEND";gosub addLine
     m_line$=" REM ";gosub addLine
-    m_line$="DEF FN47$(test47$)";gosub addLine                            
-    m_line$="RETURN SEVAL(test47$,ERR=*NEXT)";gosub addLine
-    m_line$="if err<>47 then fnerr err";gosub addLine   
-    m_line$="return """"";gosub addLine
-    m_line$="FNEND";gosub addLine
  exit   
  
  

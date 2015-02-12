@@ -61,7 +61,8 @@ class public PgmLine
 
     field public String pgmLine! 
     field public BBjVector statements! 
-
+    field private boolean isBBjLine!=bbjapi().FALSE
+    
     method private PgmLine() 
     methodend 
 
@@ -70,6 +71,17 @@ class public PgmLine
 
         if pgmLine!<>null() and pgmLine!.length()>0 then 
         #statements! = bbjapi().makeVector()
+        
+        if pgmLine!.matches("\d{1,}\ *?REM\ .*") then 
+           rem enable line          
+           if pgmLine!.contains("REM ""<BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ *?REM\ ""<BBJ","$1 ") endif 
+           rem disable line
+           if pgmLine!.contains("REM "">BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ ","$1 REM\ ") endif 
+           #pgmLine! = cpl(pgmLine!)
+           #isBBjLine!=bbjapi().TRUE
+           methodret
+        endif
+        
         #pgmLine! = pgmLine!
         #pgmLine! = pgmLine!.replaceAll("REM\ *?""","REM """"")     
         #splitLine()
@@ -110,6 +122,7 @@ class public PgmLine
 
     method public String getBBjLine()
      seterr convertErr 
+     if #isBBjLine! then methodret #pgmLine! endif 
      declare String pgmLine! 
      declare String statement! 
      statement! = ""
@@ -120,10 +133,13 @@ class public PgmLine
 
          rem if statement is line number goto ok 
          if statement!.matches("\d{1,}") then goto lineok endif 
-
-         rem comments 
-         rem don't convert lines that starts with comments 
-         if statement!.trim().startsWith("REM ") then goto lineOk endif 
+         
+         if statement!.startsWith("REM ") then 
+            for x=i to #statements!.size()-1
+                pgmLine! = pgmLine!+#statements!.get(x).toString()
+            next x 
+            exitto lineDone
+         endif 
 
          rem replace round brackets 
          if statement!.matches(".*?\(.*?\).*") then statement! = StringReplace.replaceRoundBrackets(statement!) endif 
@@ -298,9 +314,9 @@ class public PgmLine
      if pgmLine!.matches(".*?\bPKY\ *?\(.*") then 
             if pgmline!.matches(".*?(PKY\ *?\()(.*?)(\,).*?ERR\=(\d{1,}).*") then pkyErr=1 endif 
             if pgmline!.matches(".*?(PKY\ *?\()(.*?)(\,).*?END\=(\d{1,}).*") then pkyEnd=1 endif
-            escape
+            
             if pkyErr=0 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?),END\=(\d{1,}.*?)(\;|$)","$1,ERR\=$2$3") endif 
-            if pkyErr=1 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?)(,ERR\=\d{1,})","$1").replaceAll("(PKY.*?)(,END\=\d{1,})","$1$2") endif 
+            if pkyErr=1 and pkyEnd then pgmLine!=pgmLine!.replaceAll("(PKY.*?)(,ERR\=\d{1,})","$1").replaceAll("(PKY.*?),END\=(\d{1,})","$1,ERR=$2") endif 
               
            pgmline!=pgmline!.replaceAll("PKY\(","TB.PKY(")
      
@@ -315,12 +331,7 @@ class public PgmLine
     printDROP: 
     if pgmLine!.matches(".*PRINT.*?DROP.*") then pgmLine!=pgmLine!.replaceAll("(PRINT\ *?\'DROP\'\ *?\()(.*?)(\).*?)(\;|$)","CALL ""DB%WIN"",""DELETE"",$2") endif 
 
-
-    rem enable line          
-    if pgmLine!.contains("REM """"<BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ *?REM\ """"<BBJ","$1 ") endif 
-    rem disable line
-
-    if pgmLine!.contains("REM """">BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ ","$1 REM\ ") endif 
+    lineDone:
 
      methodret CPL(pgmLine!)
      convertErr: 
@@ -1142,8 +1153,8 @@ REM /*
 
 classend 
 
-                 
-z$="20001 LET CLE$=PKY(CANAL,END=11111,ERR=22222)"
+
+
 
 declare PgmLine p!
 p! = new PgmLine(z$) 

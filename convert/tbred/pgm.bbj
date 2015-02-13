@@ -1154,12 +1154,4 @@ REM /*
 classend 
 
 
-z$="00161 LET CSEP$=$8A$; REM "">BBJ REM  "
-
-declare PgmLine p!
-p! = new PgmLine(z$) 
-z$ = p!.getBBjLine()
-
-? z$
-
 

@@ -15,8 +15,8 @@ class public PgmTest
 	    l! = new PgmLine("20001 LET CLE$=PKY(CANAL,END=11111,ERR=22222)") 
 	    Assert.Equals(l!.getBBjLine(),"20001 LET CLE$=TB.PKY(CANAL,ERR=11111)")
 	    
-	    l! = new PgmLine("00161 LET CSEP$=$8A$; REM "">BBJ REM  ") 
-        Assert.Equals(l!.getBBjLine(),"00161 REM LET CSEP$=$8A$; REM "">BBJ REM")
+	    l! = new PgmLine("00161 LET CSEP$=$8A$; REM "">BBJ REM  ") 	    
+        Assert.Equals(l!.getBBjLine(),"0161 REM LET CSEP$=$8A$ ; REM """">BBJ REM")
 	methodend
 
 	rem @AfterClass

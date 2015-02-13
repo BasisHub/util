@@ -75,8 +75,6 @@ class public PgmLine
         if pgmLine!.matches("\d{1,}\ *?REM\ .*") then 
            rem enable line          
            if pgmLine!.contains("REM ""<BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ *?REM\ ""<BBJ","$1 ") endif 
-           rem disable line
-           if pgmLine!.contains("REM "">BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ ","$1 REM\ ") endif 
            #pgmLine! = cpl(pgmLine!)
            #isBBjLine!=bbjapi().TRUE
            methodret
@@ -332,6 +330,8 @@ class public PgmLine
     if pgmLine!.matches(".*PRINT.*?DROP.*") then pgmLine!=pgmLine!.replaceAll("(PRINT\ *?\'DROP\'\ *?\()(.*?)(\).*?)(\;|$)","CALL ""DB%WIN"",""DELETE"",$2") endif 
 
     lineDone:
+    rem disable line if needed
+    if pgmLine!.contains("REM """">BBJ") then pgmLine! = pgmLine!.replaceAll("(\d{1,})\ ","$1 REM\ ") endif 
 
      methodret CPL(pgmLine!)
      convertErr: 
@@ -1154,7 +1154,7 @@ REM /*
 classend 
 
 
-
+z$="00161 LET CSEP$=$8A$; REM "">BBJ REM  "
 
 declare PgmLine p!
 p! = new PgmLine(z$) 

@@ -1436,14 +1436,22 @@ REM         info!.setKeyName(0,newKeyName$)
         seterr PKYError
 	    keyRead$=$ff$
 	    keyRead$=keyr(channel,err=*next)
-            if key(channel,END=PKYEnd)=keyf(channel,END=*NEXT) then goto PKYError endif 
+	        REM if the pointer is on the first key pky should return an error 2
+            if key(channel,END=PKYEnd)=keyf(channel,END=*NEXT) or keyRead$=keyf(channel,END=*NEXT) then goto PKYError endif 
             notPartialKey=1 
-            rem read with partial key 
+            rem on error 11 we read with partial key or with a missing key 
             if keyr(channel,err=*next)<>keyp(channel) then notPartialKey=0 endif 
-            if notPartialKey then read (channel,dir=-1,END=*NEXT)
+            if notPartialKey then 
+                rem check if partial or missing key
+                if len(keyr(channel,err=*endif))=len(keyp(channel)) then
+                    read(channel,key=keyr(channel,err=*endif,dom=*endif))
+                else 
+                    read (channel,dir=-1,END=*NEXT)
+                endif
+            endif
             pky$=keyp(channel,err=PKYErrorKey)
 	    if (keyRead$ <> $FF$)  then
-            	read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
+           read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
 	    else
 		read (channel,END=*NEXT)
 	    fi
@@ -1463,7 +1471,7 @@ REM         info!.setKeyName(0,newKeyName$)
 	    	else
 			read (channel,END=*NEXT)
 	    	fi
-            	methodret pky$
+            methodret pky$
       methodend 
 
 

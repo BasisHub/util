@@ -1441,14 +1441,7 @@ REM         info!.setKeyName(0,newKeyName$)
             notPartialKey=1 
             rem on error 11 we read with partial key or with a missing key 
             if keyr(channel,err=*next)<>keyp(channel) then notPartialKey=0 endif 
-            if notPartialKey then 
-                rem check if partial or missing key
-                if len(keyr(channel,err=*endif))=len(keyp(channel)) then
-                    read(channel,key=keyr(channel,err=*endif,dom=*endif))
-                else 
-                    read (channel,dir=-1,END=*NEXT)
-                endif
-            endif
+            if notPartialKey then read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
 	    if (keyRead$ <> $FF$)  then
            read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 

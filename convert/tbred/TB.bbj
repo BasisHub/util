@@ -1331,7 +1331,7 @@ REM         info!.setKeyName(0,newKeyName$)
             endif 
             if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
                 fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
-                fst$(33,4)=bin(num(cvs(fileSize$,16)))
+                fst$(33,4)=bin(num(cvs(fileSize$,16)),4)
             endif 
 
                         if pos("Change:"=tmpFileInfo$,1,1)>0 then 
@@ -1444,9 +1444,9 @@ REM         info!.setKeyName(0,newKeyName$)
             if notPartialKey then read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
 	    if (keyRead$ <> $FF$)  then
-           read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
+	        read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
 	    else
-		read (channel,END=*NEXT)
+	        read (channel,END=*NEXT)
 	    fi
             methodret pky$
         PKYError: 

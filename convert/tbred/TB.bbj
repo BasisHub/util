@@ -137,7 +137,11 @@ class public TB
 
 
     method public static BBjString NTD(BBjNumber dateval, BBjString datemask$)
-REM         seterr NTDJ_err
+        seterr NTDJ_err
+        
+        prc=tcb(14)
+        PRECISION 14
+        
         declare String datemask!
         datemask!=datemask$
 
@@ -272,9 +276,11 @@ REM         seterr NTDJ_err
             endif 
 
         ntd$=ntd!
+        PRECISION prc
         return_tnd:
         methodret ntd$
         NTDJ_err:
+        PRECISION prc
         throw errmes(-1)+" in class TB at line "+str(tcb(5)),err
     methodend
 

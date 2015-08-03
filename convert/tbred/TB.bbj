@@ -137,14 +137,14 @@ class public TB
 
 
     method public static BBjString NTD(BBjNumber dateval, BBjString datemask$)
-        seterr NTDJ_err
+REM         seterr NTDJ_err
         
         prc=tcb(14)
         PRECISION 14
         
         declare String datemask!
         datemask!=datemask$
-
+        
 
         if dateval=0 then 
             dateval=JUL(0,0,0)-1721423
@@ -218,7 +218,7 @@ class public TB
         if x<>0 then
             let datemask$=datemask$(1,x-1)+"%sz"+datemask$(X+2)
         fi
-
+        
         let x=pos("SSSSSS"=datemask$)
         if x<>0 then
             datedec$=""
@@ -232,7 +232,7 @@ class public TB
                 datedec$=str(datedecval:".000000")
             endif 
 
-                   fi
+        fi
 
         datemask! = datemask$ 
         datemask$ = datemask!.replaceAll("Day","%Dl")
@@ -240,6 +240,7 @@ class public TB
         numDate=num(str(dateval+1721423))
 
         if datedec>0 
+            if datedec=24 then datedec=23 endif             
             ntd$=date(numDate,datedec:datemask$)+datedec$
         else  
             ntd$=date(numDate:datemask$)+datedec$

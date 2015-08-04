@@ -150,9 +150,8 @@ REM         seterr NTDJ_err
             dateval=JUL(0,0,0)-1721423
             datedec=TIM
         else    
-            datedec=mod(dateval,1)
-            dateval=dateval-datedec
-            datedec=datedec*24   
+            datedec=24*(dateval-int(dateval))
+            dateval=int(dateval)
         endif
 
            let x=pos("YYYY"=datemask$)
@@ -239,8 +238,7 @@ REM         seterr NTDJ_err
 
         numDate=num(str(dateval+1721423))
 
-        if datedec>0 
-            if datedec=24 then datedec=23 endif             
+        if datedec>0          
             ntd$=date(numDate,datedec:datemask$)+datedec$
         else  
             ntd$=date(numDate:datemask$)+datedec$

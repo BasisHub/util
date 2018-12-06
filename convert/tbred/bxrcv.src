@@ -63,7 +63,7 @@ if mod(numFiles,100)=0 then print @(3,0),numFiles
 rem open destination pgm file 
 rem add TB class reference 
 REM print(1)"0001 use ::tbred/TB.bbj::TB"
-m_content!.append("0001 use ::tbred/TB.bbj::TB")
+m_content!.append("00001 use ::tbred/TB.bbj::TB")
 m_content!.append($0D0A$)
 L2060: REM - LOOP FOR EACH LINE
 LET RECORDS=RECORDS+1; rem IF MOD(RECORDS,1000)=0 THEN PRINT ".",
@@ -91,6 +91,7 @@ call "addFunctions.bbj::addNEA",m_content!
 
 print (1)m_content!.toString()
 CLOSE (1)
+REM print "done : "+F$(9)
 GOTO L1000
 L3000: REM 3000 -- DATA FILES
 IF !(MULTI_TO_MKEYED) THEN OPEN (1)F$(9); LOCK (1)

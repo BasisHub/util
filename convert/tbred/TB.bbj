@@ -18,12 +18,14 @@ class public TB
 
     method public static Boolean isProgram(BBjString file$)
 	isFichier! = bbjapi().FALSE
-
-	tstprog!=BBjAPI().getProgramInfo(file$,ERR=isprog_exit)
-	tmp$=CPL(tstprog!.getListingVector().get(0),ERR=isprog_exit)
+	
+	c_prog=unt; open (c_prog,ISZ=-1,err=isprog_exit) file$
+	read(c_prog,err=isprog_exit) prem_ligne$
+	tmp$=CPL(prem_ligne$,ERR=isprog_exit)
 	isFichier! = bbjapi().TRUE
 
 	isprog_exit:
+	if c_prog<>0 then close(c_prog)
 	methodret isFichier!
     methodend
 
@@ -54,7 +56,9 @@ class public TB
 	methodret canal
     methodend
 
+
     method public static BBjNumber DTN(BBjString dateval$, BBjString datemask$)
+
         seterr DTNJ_err
         prc=tcb(14)
         PRECISION 8
@@ -122,7 +126,7 @@ class public TB
         if x<>0 then
             let datedec=datedec+num(dateval$(x,2))/24/60/60
         fi
-
+        
         return_dtn:
         PRECISION prc
         dtn = jul(dt$,mk$)-1721423
@@ -244,7 +248,7 @@ REM         seterr NTDJ_err
             ntd$=date(numDate:datemask$)+datedec$
         endif 
 
-                declare String ntd! 
+        declare String ntd! 
         ntd! = ntd$
 
         if stbl("!LOCALE")="fr_FR" then 
@@ -330,7 +334,46 @@ REM         seterr NTDJ_err
         cdnError: 
         methodret JUL(0,0,0)-1721423+TIM/24
     methodend
+    
+    REM /**
+    REM  * setDateMask 
+    REM  * set the datemask in !DATE
+    REM  * @param TBD datemask
+    REM  */
+    method public void setDateMask(BBjString dateMask$)
+       seterr setDateMaskErr 
+       if dateMask$="" then methodret 
+       declare String dmask!
+       dmask!=dateMask$
+       
+       dmask!=dmask!.replaceAll("YYYY","%Yl")
+       dmask!=dmask!.replaceAll("YY","%Yz")
+       dmask!=dmask!.replaceAll("DD","%Dz")
+       dmask!=dmask!.replaceAll("MM","%Mz")
+       dmask!=dmask!.replaceAll("HH","%Hz")
+       dmask!=dmask!.replaceAll("MI","%mz")
+       dmask!=dmask!.replaceAll("SS","%sz")
+       
+       dummy$=stbl("!DATE","%Yl%Mz%Dz"+$00$+stbl("!DATE")(13))
+       
+       methodret 
+       setDateMaskErr:
+       methodret
+    methodend
 
+
+    REM /**
+    REM  * getDateMask
+    REM  * @return current datemask from !DATE
+    REM  */
+    method public BBjString getDateMask()
+        seterr getDateMaskErr
+        currentDateMask$=stbl("!DATE")
+        currentDateMask$=currentDateMask$(1,pos($00$=currentDateMask$)-1)  
+        methodret currentDateMask$
+        getDateMaskErr:
+        methodret "%Yl.%Mz.%Dz"
+    methodend
 
     method public static BBjString CVT(BBjString stringa$, BBjNumber valore)
         seterr CVTJ_err
@@ -520,7 +563,7 @@ REM         seterr NTDJ_err
         let temp$=fid(channel)
         if len(temp$)=2 or len(temp$)=3 then
             let fid_tbd$=temp$
-	    if len(temp$)=3 and pos(temp$(1,1)="PT")>0 then fid_tbd$=fid_tbd$(2)
+	    if len(temp$)=3 and pos(temp$(1,1)="PTL")>0 then fid_tbd$=fid_tbd$(2)
             goto FIDJ_exit  
         fi
         
@@ -536,10 +579,11 @@ REM         seterr NTDJ_err
         rem added for infodev 
         rem returns TB filetype 
         rem vkeyed returns msort 
-        switch 1
-           case temp$(1,1)=$0D$;fid_tbd$(10,1)=$06$;break 
-           case default;fid_tbd$(10,1)=temp$(1,1);break
-        swend
+        fid_tbd$(10,1)=temp$(1,1)
+        if temp$(1,1)=$0D$ and dec(temp$(2,1))=0 then fid_tbd$(10,1)=$06$ 
+        if temp$(1,1)=$0D$ and dec(temp$(2,1))>0 then fid_tbd$(10,1)=$02$ 
+        if temp$(1,1)=$05$ then fid_tbd$(10,1)=$0A$
+         
 
 	if (fid_tbd$(10,1) = $03$ ) then
 		if (#isProgram(temp$(9))) then
@@ -750,12 +794,16 @@ REM         seterr NTDJ_err
         rem map [?] to \?
         rem map [*] to \*
         rem map [[] to \[
+	rem map | to \|
+	rem map . to \.
         rem map $  to \$
         rem replace * par .*
         rem */ 
         b! = b!.replaceAll("\\","\\\\")
         b! = b!.replaceAll("\[\*\]","\\*") 
         b! = b!.replaceAll("\[\?\]","\\?") 
+	b! = b!.replaceAll("\.","\\.")
+	b! = b!.replaceAll("\|","\\|")
         b! = b!.replaceAll("(?<!\\)\?",".")  
         b! = b!.replaceAll("\[\[\]","\\[") 
         b! = b!.replaceAll("(?<!\\)\*","\.\*") 
@@ -850,20 +898,26 @@ REM         seterr NTDJ_err
 
             ch=unt;open(ch)file$ 
             info! = #fileSystem!.getFileInfo(ch) 
-            
+
+	    rem test si le addsort existe
+
             declare BBjKeyInfo keyInfo! 
+            keyInfo! = info!.getKeyInfo(sortname$,ERR=*next); goto end_addsort
+	    
             keyInfo! = #getKeyInfo(keyChain$) 
             info!.lock()
             info!.addKey(sortname$,keyInfo!)
             info!.unlock()
+
+	end_addsort:
             close(ch)
         methodret
         m_error: 
-         System.out.println("Error adding sort"+str(err)+str(tcb(5)))
+         throw errmes(-1)+" TB.ADDSORT ligne "+str(tcb(5)),err
     methodend 
 
             rem /*
-    rem * addsort  
+    rem * REMSORT  
     rem */
     method public static void REMSORT(BBjString file$, BBjString sortname$)
          seterr remsort_error
@@ -940,6 +994,7 @@ REM         seterr NTDJ_err
         close(ch)
         methodret 
         RemSortError: 
+	    close(ch)
             System.out.println("error removing index:"+fileName$+ " "+sortName$)
     methodend 
 
@@ -1024,7 +1079,7 @@ REM         info!.setKeyName(0,newKeyName$)
             xfd$=fill(85,$00$)
             xfd$(1,1)=$01$
             xfd$(3,8)=bin(lFileInfo!.getInode(),8)
-            xfd$(38,4)=bin(lFileInfo!.getFileSize(),4)
+            if (lFileInfo!.getFileSize() <= 4294967295) then xfd$(38,4)=bin(lFileInfo!.getFileSize(),4)
             xfd$(54,6)=bin(lFileInfo!.getLastChanged(),6)
             xfd$(60,6)=bin(lFileInfo!.getLastAccess(),6)
             xfd$(66,6)=bin(lFileInfo!.getLastModified(),6)
@@ -1122,13 +1177,13 @@ REM         info!.setKeyName(0,newKeyName$)
           rem todo: 18-19 Current commit counter ?
           rem todo: 20-21 Channel's commit count, non-zero if overridden by the CTC=option, otherwise zero
           rem todo: 22-45 unused 
-
+	
           declare BBjVector keys! 
           keys! = info!.getKeyInfo() 
 
-                    for numKey=0 to keys!.size()-1  
+          for numKey=0 to keys!.size()-1  
 
-                      dim keyInfo$(39) 
+              dim keyInfo$(39) 
             keyInfo$=fill(39,$00$)
             declare BBjKeyInfo keyInfo!          
 
@@ -1169,7 +1224,8 @@ REM         info!.setKeyName(0,newKeyName$)
             next numSegement
             xfd$=xfd$+keyInfo$
           next numKey
-                      break 
+          break 
+ 
         case 5 
             xfd$=TB.FID(channel) 
             xfd$=xfd$+$00$
@@ -1262,7 +1318,7 @@ REM         info!.setKeyName(0,newKeyName$)
         close(ch)
 
         dim fst$(118)
-        if option=1 then 
+        if option=1 OR option=0 then 
           rem 1-2
           fst$(1)=$0020$
           rem 3-4 
@@ -1287,7 +1343,7 @@ REM         info!.setKeyName(0,newKeyName$)
 
                 rem *nix OS 
         ch=unt 
-        open(ch)"| /usr/bin/stat "+file$ +" | sed 's/\x09/        /g'"
+        open(ch)"| LANG=C;/usr/bin/stat "+file$ +" | sed 's/\x09/        /g'"
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
 
@@ -1336,7 +1392,7 @@ REM         info!.setKeyName(0,newKeyName$)
             endif 
             if pos("Size:"=tmpFileInfo$,1,1)>0 and pos("Uid"=tmpFilePos$,1,1)=0 then 
                 fileSize$=tmpFileInfo$(pos("Size:"=tmpFileInfo$,1,1)+6,pos("Blocks:"=tmpFileInfo$,1,1)-(pos("Size:"=tmpFileInfo$,1,1)+6))
-                fst$(33,4)=bin(num(cvs(fileSize$,16)),4)
+                fst$(33,4)=bin(num(cvs(fileSize$,16),err=*next),4,err=*next)
             endif 
 
                         if pos("Change:"=tmpFileInfo$,1,1)>0 then 
@@ -1392,6 +1448,7 @@ REM         info!.setKeyName(0,newKeyName$)
             dsd$(4,1)="P"
             dsd$(5,1)=$09$
             if pos("lp -d"=dAlias$,1,1)>0 then dsd$(6,1)=$01$ endif 
+            if pos("spooler "=dAlias$,1,1)>0 then dsd$(6,1)=$01$ endif 
             if pos("/dev/tty"=dAlias$,1,1)>0 then dsd$(6,1)=$02$ endif 
             break
         case in$(1,1)="D"
@@ -1439,20 +1496,20 @@ REM         info!.setKeyName(0,newKeyName$)
 
       method public static BBjString PKY(BBjNumber channel) 
         seterr PKYError
-	    keyRead$=$ff$
-	    keyRead$=keyr(channel,err=*next)
-	        REM if the pointer is on the first key pky should return an error 2
+	   keyRead$=$ff$
+	   keyRead$=keyr(channel,err=*next)
+	       REM if the pointer is on the first key pky should return an error 2
             if key(channel,END=PKYEnd)=keyf(channel,END=*NEXT) or keyRead$=keyf(channel,END=*NEXT) then goto PKYError endif 
             notPartialKey=1 
             rem on error 11 we read with partial key or with a missing key 
             if keyr(channel,err=*next)<>keyp(channel) then notPartialKey=0 endif 
             if notPartialKey then read (channel,dir=-1,END=*NEXT)
             pky$=keyp(channel,err=PKYErrorKey)
-	    if (keyRead$ <> $FF$)  then
-	        read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
-	    else
-	        read (channel,END=*NEXT)
-	    fi
+	   if (keyRead$ <> $FF$)  then
+	       read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
+	   else
+	       read (channel,END=*NEXT)
+	   fi
             methodret pky$
         PKYError: 
             throw errmes(-1)+" in class TB at line "+str(tcb(5)),2
@@ -1464,11 +1521,11 @@ REM         info!.setKeyName(0,newKeyName$)
 		if keyr(channel,err=*next) > keyl(channel,end=*next) then notPartialKey=0 endif
             	if notPartialKey then read (channel,key=keyl(channel,end=*next),dir=0,END=*NEXT)
             	pky$=keyp(channel,err=PKYErrorKey)
-	    	if (keyRead$ <> $FF$)  then
+	   	if (keyRead$ <> $FF$)  then
             		read (channel,key=keyRead$,DOM=*NEXT,END=*NEXT) 
-	    	else
+	   	else
 			read (channel,END=*NEXT)
-	    	fi
+	   	fi
             methodret pky$
       methodend 
 
@@ -1500,10 +1557,12 @@ REM         info!.setKeyName(0,newKeyName$)
 
                 rem *nix OS 
         ch=unt 
-        open(ch)"| /usr/bin/stat "+file$ 
+        open(ch)"| LANG=C; /usr/bin/stat "+file$ 
+	#filePath$ = file$
         while 1 
             read(ch,end=*break)tmpFileInfo$ 
 
+	
             if pos("File:"=tmpFileInfo$,1,1)>0 and pos("->"=tmpFileInfo$,1,1)>0 then 
                 #filePath$=tmpFileInfo$(pos("`"=tmpFileInfo$,1,2)+1,pos("'"=tmpFileInfo$,1,2)-(pos("`"=tmpFileInfo$,1,2)+1))
                 continue
@@ -1515,7 +1574,7 @@ REM         info!.setKeyName(0,newKeyName$)
              #device$=fill(8-len(device$),"0")+device$
 
              inode$=tmpFileInfo$(pos("Inode: "=tmpFileInfo$,1,1)+7,pos("Links"=tmpFileInfo$,1,1)-1-(pos("Inode: "=tmpFileInfo$,1,1)+7))
-             #inode=num(inode$)
+             #inode=num(inode$,ERR=*next)
 
                           rem TODO: 19-20 File protection bits             
              numLinks$=tmpFileInfo$(pos("Links: "=tmpFileInfo$)+len("Links: "))

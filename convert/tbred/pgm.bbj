@@ -405,7 +405,7 @@ class public StringReplace
         keyWordMap!.put("INPUT",""); keyWordMap!.put("FINPUT",""); keyWordMap!.put("READ","") ; keyWordMap!.put("EXTRACT",""); keyWordMap!.put("PREAD","")
         keyWordMap!.put("PEXTRACT",""); keyWordMap!.put("RECORD",""); keyWordMap!.put("OPEN",""); keyWordMap!.put("REMOVE",""); keyWordMap!.put("PRINT","")
         keyWordMap!.put("KEYL","");keyWordMap!.put("KEYF","");keyWordMap!.put("KEYN","");keyWordMap!.put("KEYP","")
-
+        keyWordMap!.put("FIND","")
         keyWordMap!.put("INFO","")
         keyWordMap!.put("WINDOW","")
         keyWordMap!.put("SHAPE","")
@@ -464,7 +464,6 @@ class public StringReplace
         seterr replaceBracketsError
         declare Pattern p!
         seterr 0
-
         p! = Pattern.compile("(\w+\ *?\()(?=(?:(?:[^""]*""){2})*[^""]*$)")
 
         declare Matcher m!
@@ -1195,8 +1194,8 @@ REM /*
 
 classend
 
-
-line! ="01545 IF D(26,0)<>0 THEN FIND (9,KEY=""999""+V1$,DOM=01550) *,E2$; REM """">BBJ"
+escape
+line! = "01820 FIND(3,KEY=B$) IOL=00211 ; LET B100$=B1$, B200$=B2$"
 declare PgmLine pgmLine!
 pgmLine! = new PgmLine(line!)
 ?pgmLine!.getBBjLine()

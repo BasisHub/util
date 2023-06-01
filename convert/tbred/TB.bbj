@@ -916,25 +916,6 @@ REM         seterr NTDJ_err
          throw errmes(-1)+" TB.ADDSORT ligne "+str(tcb(5)),err
     methodend 
 
-            rem /*
-    rem * REMSORT  
-    rem */
-    method public static void REMSORT(BBjString file$, BBjString sortname$)
-         seterr remsort_error
-            declare BBjFileInfo info! 
-
-            ch=unt;open(ch)file$ 
-            info! = #fileSystem!.getFileInfo(ch) 
-
-            declare BBjKeyInfo keyInfo! 
-            info!.lock()
-            info!.dropKey(sortname$)
-            info!.unlock()
-            close(ch)
-        methodret
-        remsort_error: 
-         System.out.println("Error removing sort"+str(err)+str(tcb(5)))
-    methodend 
 
     method public static BBjKeyInfo getKeyInfo(BBjString keyDefinition$) 
         declare BBjVector keySegments! 
